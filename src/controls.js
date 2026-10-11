@@ -15,9 +15,9 @@ export class PlayerControls {
     this.touchId = null;
     this.lastTouch = { x: 0, y: 0 };
 
-    domElement.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
-    domElement.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
-    domElement.addEventListener('touchend', (e) => this.onTouchEnd(e));
+    document.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+    document.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+    document.addEventListener('touchend', (e) => this.onTouchEnd(e));
 
     this.setupJoystick();
   }
@@ -26,7 +26,7 @@ export class PlayerControls {
     const base = document.getElementById('joystick-base');
     const knob = document.getElementById('joystick-knob');
     if (!base || !knob) {
-      console.warn('Joystick tidak ditemukan di HTML');
+      console.warn('Joystick tidak ditemukan');
       return;
     }
 
@@ -79,6 +79,11 @@ export class PlayerControls {
   }
 
   onTouchStart(e) {
+    const target = e.target;
+    if (target.id === 'joystick-base' || target.id === 'joystick-knob' || target.id === 'jump-btn') {
+      return;
+    }
+
     for (const touch of e.changedTouches) {
       if (touch.clientX > window.innerWidth * 0.5) {
         this.touchId = touch.identifier;
