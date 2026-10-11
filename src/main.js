@@ -5,6 +5,7 @@ import { PlayerControls } from './controls.js';
 import { Flashlight } from './battery.js';
 import { HUD } from './ui.js';
 import { ForestAudio } from './audio.js';
+import { BookManager } from './books.js';
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -51,11 +52,26 @@ try {
   const hud = new HUD();
   const audio = new ForestAudio();
 
+  // Buku
+  const books = new BookManager(scene, obstacles, MAP_BOUNDARY);
+
   const state = {
     playerPos: new THREE.Vector3(0, 1.7, 0),
     time: 7 * 60,
     hp: 100,
     enemyDistance: 999,
+    books: {
+      collected: 0,
+      total: books.getTotal(),
+    },
+  };
+
+  // Callback saat semua buku terkumpul
+  books.onAllCollected = () => {
+    gameStarted = false;
+    document.getElementById('gameover-overlay').classList.add('visible');
+    audio.stopMenuMusic();
+    audio.pauseAll();
   };
 
   // ===== MENU LOGIC =====
@@ -67,6 +83,7 @@ try {
   const crosshairEl = document.getElementById('crosshair');
   const hudEl = document.getElementById('hud');
   const helpOverlay = document.getElementById('help-overlay');
+  const gameoverOverlay = document.getElementById('gameover-overlay');
 
   document.getElementById('btn-play').addEventListener('click', () => {
     gameStarted = true;
@@ -76,7 +93,6 @@ try {
     crosshairEl.style.display = 'block';
     hudEl.classList.add('visible');
 
-    // Stop musik menu, mulai ambience hutan
     audio.stopMenuMusic();
     audio.forceStart();
   });
@@ -99,10 +115,13 @@ try {
     }
   });
 
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    location.reload();
+  });
+
   // ===== MULAI MUSIK MENU =====
   audio.startMenuMusic();
 
-  // Listener cadangan kalau autoplay diblokir browser
   const onFirstGesture = () => {
     if (!audio.menuStarted) audio.startMenuMusic();
     document.removeEventListener('pointerdown', onFirstGesture);
@@ -126,6 +145,11 @@ try {
       controls.update(dt, state);
       flashlight.update(dt, state, hud);
       audio.update(dt);
+
+      // Update buku
+      books.update(dt, state.playerPos);
+      state.books.collected = books.getCollected();
+
       hud.update(state);
       state.time = (state.time + dt * 60) % (24 * 60);
     }
