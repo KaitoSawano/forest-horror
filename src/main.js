@@ -75,6 +75,9 @@ try {
     jumpBtnEl.style.display = 'block';
     crosshairEl.style.display = 'block';
     hudEl.classList.add('visible');
+
+    // Stop musik menu, mulai ambience hutan
+    audio.stopMenuMusic();
     audio.forceStart();
   });
 
@@ -88,7 +91,6 @@ try {
 
   document.getElementById('btn-quit').addEventListener('click', () => {
     if (window.confirm('Keluar dari game?')) {
-      // Coba tutup app (kalau di Capacitor)
       if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
         window.Capacitor.Plugins.App.exitApp();
       } else {
@@ -96,6 +98,20 @@ try {
       }
     }
   });
+
+  // ===== MULAI MUSIK MENU =====
+  audio.startMenuMusic();
+
+  // Listener cadangan kalau autoplay diblokir browser
+  const onFirstGesture = () => {
+    if (!audio.menuStarted) audio.startMenuMusic();
+    document.removeEventListener('pointerdown', onFirstGesture);
+    document.removeEventListener('touchstart', onFirstGesture);
+    document.removeEventListener('click', onFirstGesture);
+  };
+  document.addEventListener('pointerdown', onFirstGesture, { passive: true });
+  document.addEventListener('touchstart', onFirstGesture, { passive: true });
+  document.addEventListener('click', onFirstGesture);
 
   // ===== GAME LOOP =====
   const clock = new THREE.Clock();
@@ -106,7 +122,6 @@ try {
     let dt = Math.min(clock.getDelta(), 0.1);
     if (firstFrame) { dt = 0; firstFrame = false; }
 
-    // Hanya update kontrol saat game sudah mulai
     if (gameStarted) {
       controls.update(dt, state);
       flashlight.update(dt, state, hud);
