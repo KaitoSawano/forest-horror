@@ -58,6 +58,46 @@ try {
     enemyDistance: 999,
   };
 
+  // ===== MENU LOGIC =====
+  let gameStarted = false;
+
+  const menuEl = document.getElementById('menu');
+  const joystickEl = document.getElementById('joystick-base');
+  const jumpBtnEl = document.getElementById('jump-btn');
+  const crosshairEl = document.getElementById('crosshair');
+  const hudEl = document.getElementById('hud');
+  const helpOverlay = document.getElementById('help-overlay');
+
+  document.getElementById('btn-play').addEventListener('click', () => {
+    gameStarted = true;
+    menuEl.classList.add('hidden');
+    joystickEl.style.display = 'block';
+    jumpBtnEl.style.display = 'block';
+    crosshairEl.style.display = 'block';
+    hudEl.classList.add('visible');
+    audio.forceStart();
+  });
+
+  document.getElementById('btn-help').addEventListener('click', () => {
+    helpOverlay.classList.add('visible');
+  });
+
+  document.getElementById('help-close').addEventListener('click', () => {
+    helpOverlay.classList.remove('visible');
+  });
+
+  document.getElementById('btn-quit').addEventListener('click', () => {
+    if (window.confirm('Keluar dari game?')) {
+      // Coba tutup app (kalau di Capacitor)
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.exitApp();
+      } else {
+        window.close();
+      }
+    }
+  });
+
+  // ===== GAME LOOP =====
   const clock = new THREE.Clock();
   let firstFrame = true;
 
@@ -66,31 +106,17 @@ try {
     let dt = Math.min(clock.getDelta(), 0.1);
     if (firstFrame) { dt = 0; firstFrame = false; }
 
-    controls.update(dt, state);
-    flashlight.update(dt, state, hud);
-    audio.update(dt);
-    hud.update(state);
-
-    state.time = (state.time + dt * 60) % (24 * 60);
+    // Hanya update kontrol saat game sudah mulai
+    if (gameStarted) {
+      controls.update(dt, state);
+      flashlight.update(dt, state, hud);
+      audio.update(dt);
+      hud.update(state);
+      state.time = (state.time + dt * 60) % (24 * 60);
+    }
 
     renderer.render(scene, camera);
   }
-
-  // Coba autoplay langsung
-  audio.tryStart();
-
-  // Listener cadangan kalau autoplay diblokir
-  const onFirstGesture = () => {
-    audio.forceStart();
-    document.removeEventListener('pointerdown', onFirstGesture);
-    document.removeEventListener('touchstart', onFirstGesture);
-    document.removeEventListener('click', onFirstGesture);
-    document.removeEventListener('keydown', onFirstGesture);
-  };
-  document.addEventListener('pointerdown', onFirstGesture, { passive: true });
-  document.addEventListener('touchstart', onFirstGesture, { passive: true });
-  document.addEventListener('click', onFirstGesture);
-  document.addEventListener('keydown', onFirstGesture);
 
   animate();
 
