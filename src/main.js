@@ -29,7 +29,7 @@ try {
     100
   );
   camera.position.set(0, 1.7, 0);
-  scene.add(camera); // PENTING: supaya senter (child of camera) ikut ter-render
+  scene.add(camera);
 
   const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
