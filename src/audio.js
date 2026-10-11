@@ -8,7 +8,7 @@ export class ForestAudio {
     if (this.started) return;
     this.started = true;
 
-    this.audio = new Audio('./assets/night%20forest.mp3');
+    this.audio = new Audio('./assets/night-forest.mp3');
     this.audio.loop = true;
     this.audio.volume = 0.4;
 
@@ -19,6 +19,6 @@ export class ForestAudio {
   }
 
   update(dt) {
-    // Tidak ada yang perlu di-update kalau pakai file MP3
+    // Tidak ada yang perlu di-update
   }
 }
