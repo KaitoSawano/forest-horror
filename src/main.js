@@ -5,7 +5,6 @@ import { PlayerControls } from './controls.js';
 import { Flashlight } from './battery.js';
 import { HUD } from './ui.js';
 
-// Error handler — tampilkan error di layar
 function showError(msg) {
   const el = document.getElementById('debug');
   if (el) {
@@ -45,15 +44,16 @@ try {
     playerPos: new THREE.Vector3(0, 1.7, 0),
     time: 7 * 60,
     hp: 100,
-    battery: 100,
     enemyDistance: 999,
   };
 
   const clock = new THREE.Clock();
+  let firstFrame = true;
 
   function animate() {
     requestAnimationFrame(animate);
-    const dt = Math.min(clock.getDelta(), 0.1);
+    let dt = Math.min(clock.getDelta(), 0.1);
+    if (firstFrame) { dt = 0; firstFrame = false; }
 
     controls.update(dt, state);
     flashlight.update(dt, state, hud);
