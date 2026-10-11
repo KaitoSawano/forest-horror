@@ -3,12 +3,12 @@ import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 export class Flashlight {
   constructor(camera) {
     this.light = new THREE.SpotLight(
-      0xffe8b0,       // warna hangat
-      18,             // intensitas
-      45,             // jarak jangkauan lebih jauh
-      Math.PI / 3,    // sudut 60 derajat — jauh lebih lebar
-      0.5,            // penumbra — pinggiran sangat lembut
-      0.8             // decay — pelan melemah
+      0xffe8b0,
+      18,
+      45,
+      Math.PI / 3,
+      0.5,
+      0.8
     );
     this.light.position.set(0.1, -0.1, 0);
     this.light.target.position.set(0, 0, -1);
@@ -22,7 +22,6 @@ export class Flashlight {
     camera.add(this.light);
     camera.add(this.light.target);
 
-    // Cahaya pendukung di sekitar kamera
     this.fill = new THREE.PointLight(0xffe8b0, 2, 10, 1.2);
     this.fill.position.set(0, 0, 0);
     camera.add(this.fill);
