@@ -1,17 +1,12 @@
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/DRACOLoader.js';
 
 export function createHouse(scene, obstacles, mapBoundary) {
-  const dracoLoader = new DRACOLoader();
-  dracoLoader.setDecoderPath('./assets/draco/');
-
   const loader = new GLTFLoader();
-  loader.setDRACOLoader(dracoLoader);
 
   return new Promise((resolve) => {
     loader.load(
-      './assets/abandoned-house.glb',
+      './assets/house-nodraco.glb',
       (gltf) => {
         const house = gltf.scene;
 
@@ -51,7 +46,7 @@ export function createHouse(scene, obstacles, mapBoundary) {
       },
       undefined,
       (err) => {
-        console.warn('Gagal load abandoned-house.glb:', err);
+        console.warn('Gagal load house-nodraco.glb:', err);
         resolve(null);
       }
     );
