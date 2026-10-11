@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
 export function createLighting(scene) {
   const ambient = new THREE.HemisphereLight(0x223344, 0x000000, 0.08);
