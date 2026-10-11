@@ -4,9 +4,6 @@ import { createLighting } from './lighting.js';
 import { PlayerControls } from './controls.js';
 import { Flashlight } from './battery.js';
 import { HUD } from './ui.js';
-import { ForestAudio } from './audio.js';
-import { BookManager } from './books.js';
-import { createHouse } from './house.js';
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -48,30 +45,14 @@ try {
   const obstacles = createForest(scene);
   createLighting(scene);
 
-  // createHouse(scene, obstacles, MAP_BOUNDARY);
-
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
   const hud = new HUD();
-  const audio = new ForestAudio();
-
-  const books = new BookManager(scene, obstacles, MAP_BOUNDARY);
 
   const state = {
     playerPos: new THREE.Vector3(0, 1.7, 0),
     time: 7 * 60,
     hp: 100,
-    enemyDistance: 999,
-    books: {
-      collected: 0,
-      total: books.getTotal(),
-    },
-  };
-
-  books.onAllCollected = () => {
-    gameStarted = false;
-    document.getElementById('gameover-overlay').classList.add('visible');
-    audio.pauseAll();
   };
 
   let gameStarted = false;
@@ -90,9 +71,6 @@ try {
     jumpBtnEl.style.display = 'block';
     crosshairEl.style.display = 'block';
     hudEl.classList.add('visible');
-
-    audio.stopMenuMusic();
-    audio.forceStart();
   });
 
   document.getElementById('btn-help').addEventListener('click', () => {
@@ -105,29 +83,9 @@ try {
 
   document.getElementById('btn-quit').addEventListener('click', () => {
     if (window.confirm('Keluar dari game?')) {
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-        window.Capacitor.Plugins.App.exitApp();
-      } else {
-        window.close();
-      }
+      window.close();
     }
   });
-
-  document.getElementById('btn-restart').addEventListener('click', () => {
-    location.reload();
-  });
-
-  audio.startMenuMusic();
-
-  const onFirstGesture = () => {
-    if (!audio.menuStarted) audio.startMenuMusic();
-    document.removeEventListener('pointerdown', onFirstGesture);
-    document.removeEventListener('touchstart', onFirstGesture);
-    document.removeEventListener('click', onFirstGesture);
-  };
-  document.addEventListener('pointerdown', onFirstGesture, { passive: true });
-  document.addEventListener('touchstart', onFirstGesture, { passive: true });
-  document.addEventListener('click', onFirstGesture);
 
   const clock = new THREE.Clock();
   let firstFrame = true;
@@ -140,11 +98,6 @@ try {
     if (gameStarted) {
       controls.update(dt, state);
       flashlight.update(dt, state, hud);
-      audio.update(dt);
-
-      books.update(dt, state.playerPos);
-      state.books.collected = books.getCollected();
-
       hud.update(state);
       state.time = (state.time + dt * 60) % (24 * 60);
     }
