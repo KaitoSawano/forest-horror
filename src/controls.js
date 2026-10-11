@@ -1,8 +1,9 @@
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
 export class PlayerControls {
-  constructor(camera, domElement) {
+  constructor(camera, domElement, obstacles) {
     this.camera = camera;
+    this.obstacles = obstacles || []; // array of {x, z, radius}
     this.keys = {};
     this.yaw = 0;
     this.pitch = 0;
@@ -25,10 +26,7 @@ export class PlayerControls {
   setupJoystick() {
     const base = document.getElementById('joystick-base');
     const knob = document.getElementById('joystick-knob');
-    if (!base || !knob) {
-      console.warn('Joystick tidak ditemukan');
-      return;
-    }
+    if (!base || !knob) return;
 
     const maxDist = 40;
     let stickId = null;
@@ -80,9 +78,7 @@ export class PlayerControls {
 
   onTouchStart(e) {
     const target = e.target;
-    if (target.id === 'joystick-base' || target.id === 'joystick-knob' || target.id === 'jump-btn') {
-      return;
-    }
+    if (target.id === 'joystick-base' || target.id === 'joystick-knob' || target.id === 'jump-btn') return;
 
     for (const touch of e.changedTouches) {
       if (touch.clientX > window.innerWidth * 0.5) {
@@ -132,11 +128,39 @@ export class PlayerControls {
 
     if (move.length() > 0) move.normalize().multiplyScalar(speed * dt);
 
-    this.camera.position.add(move);
+    // Cek collision sebelum apply movement
+    const newX = this.camera.position.x + move.x;
+    const newZ = this.camera.position.z + move.z;
+
+    if (!this.isBlocked(newX, newZ)) {
+      this.camera.position.x = newX;
+      this.camera.position.z = newZ;
+    } else {
+      // Coba geser hanya di sumbu X atau Z saja (sliding)
+      if (!this.isBlocked(newX, this.camera.position.z)) {
+        this.camera.position.x = newX;
+      } else if (!this.isBlocked(this.camera.position.x, newZ)) {
+        this.camera.position.z = newZ;
+      }
+    }
+
     state.playerPos.copy(this.camera.position);
 
     this.camera.rotation.order = 'YXZ';
     this.camera.rotation.y = this.yaw;
     this.camera.rotation.x = this.pitch;
+  }
+
+  isBlocked(x, z) {
+    const playerRadius = 0.5;
+    for (const obs of this.obstacles) {
+      const dx = x - obs.x;
+      const dz = z - obs.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < obs.radius + playerRadius) {
+        return true;
+      }
+    }
+    return false;
   }
 }
