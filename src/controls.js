@@ -15,8 +15,8 @@ export class PlayerControls {
     this.touchId = null;
     this.lastTouch = { x: 0, y: 0 };
 
-    domElement.addEventListener('touchstart', (e) => this.onTouchStart(e));
-    domElement.addEventListener('touchmove', (e) => this.onTouchMove(e));
+    domElement.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+    domElement.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
     domElement.addEventListener('touchend', (e) => this.onTouchEnd(e));
 
     this.setupJoystick();
@@ -25,24 +25,30 @@ export class PlayerControls {
   setupJoystick() {
     const base = document.getElementById('joystick-base');
     const knob = document.getElementById('joystick-knob');
-    if (!base || !knob) return;
+    if (!base || !knob) {
+      console.warn('Joystick tidak ditemukan di HTML');
+      return;
+    }
 
     const maxDist = 40;
     let stickId = null;
     let center = { x: 0, y: 0 };
 
     const start = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const t = e.changedTouches[0];
       const rect = base.getBoundingClientRect();
       center.x = rect.left + rect.width / 2;
       center.y = rect.top + rect.height / 2;
       stickId = t.identifier;
-      e.preventDefault();
     };
 
     const move = (e) => {
       for (const t of e.changedTouches) {
         if (t.identifier !== stickId) continue;
+        e.preventDefault();
+        e.stopPropagation();
         let dx = t.clientX - center.x;
         let dy = t.clientY - center.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -53,7 +59,6 @@ export class PlayerControls {
         knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
         this.moveX = dx / maxDist;
         this.moveY = dy / maxDist;
-        e.preventDefault();
       }
     };
 
