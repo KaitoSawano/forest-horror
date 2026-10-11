@@ -11,30 +11,37 @@ function createGroundTexture() {
   ctx.fillStyle = '#3a4a28';
   ctx.fillRect(0, 0, size, size);
 
-  // Bintik-bintik acak
-  for (let i = 0; i < 1200; i++) {
+  // Bintik-bintik acak — diperbanyak
+  for (let i = 0; i < 4000; i++) {
     const x = Math.floor(Math.random() * size);
     const y = Math.floor(Math.random() * size);
     const r = Math.random();
 
-    if (r < 0.4) {
-      ctx.fillStyle = 'rgba(30, 40, 20, 0.9)';   // gelap
-    } else if (r < 0.7) {
-      ctx.fillStyle = 'rgba(70, 80, 45, 0.7)';   // lebih terang
-    } else if (r < 0.9) {
-      ctx.fillStyle = 'rgba(50, 40, 25, 0.8)';   // coklat
+    if (r < 0.35) {
+      ctx.fillStyle = 'rgba(20, 30, 15, 0.95)';   // sangat gelap
+    } else if (r < 0.6) {
+      ctx.fillStyle = 'rgba(40, 55, 25, 0.9)';    // hijau gelap
+    } else if (r < 0.8) {
+      ctx.fillStyle = 'rgba(70, 85, 45, 0.85)';   // hijau terang
+    } else if (r < 0.93) {
+      ctx.fillStyle = 'rgba(55, 40, 20, 0.9)';    // coklat
     } else {
-      ctx.fillStyle = 'rgba(90, 100, 60, 0.6)';  // kuning-hijau
+      ctx.fillStyle = 'rgba(100, 110, 70, 0.7)';  // kuning-hijau
     }
 
-    ctx.fillRect(x, y, 1, 1);
+    // Beberapa bintik berukuran 2x2 untuk variasi
+    if (Math.random() < 0.15) {
+      ctx.fillRect(x, y, 2, 2);
+    } else {
+      ctx.fillRect(x, y, 1, 1);
+    }
   }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(50, 50);        // ulang 50x50 kali di seluruh tanah
-  texture.magFilter = THREE.NearestFilter;   // <-- ini yang bikin pixel-art tajam
+  texture.repeat.set(50, 50);
+  texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestMipmapNearestFilter;
   texture.colorSpace = THREE.SRGBColorSpace;
 
