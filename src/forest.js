@@ -7,29 +7,26 @@ function createGroundTexture() {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
 
-  // Warna dasar hijau kecoklatan
   ctx.fillStyle = '#3a4a28';
   ctx.fillRect(0, 0, size, size);
 
-  // Bintik-bintik acak — diperbanyak
   for (let i = 0; i < 4000; i++) {
     const x = Math.floor(Math.random() * size);
     const y = Math.floor(Math.random() * size);
     const r = Math.random();
 
     if (r < 0.35) {
-      ctx.fillStyle = 'rgba(20, 30, 15, 0.95)';   // sangat gelap
+      ctx.fillStyle = 'rgba(20, 30, 15, 0.95)';
     } else if (r < 0.6) {
-      ctx.fillStyle = 'rgba(40, 55, 25, 0.9)';    // hijau gelap
+      ctx.fillStyle = 'rgba(40, 55, 25, 0.9)';
     } else if (r < 0.8) {
-      ctx.fillStyle = 'rgba(70, 85, 45, 0.85)';   // hijau terang
+      ctx.fillStyle = 'rgba(70, 85, 45, 0.85)';
     } else if (r < 0.93) {
-      ctx.fillStyle = 'rgba(55, 40, 20, 0.9)';    // coklat
+      ctx.fillStyle = 'rgba(55, 40, 20, 0.9)';
     } else {
-      ctx.fillStyle = 'rgba(100, 110, 70, 0.7)';  // kuning-hijau
+      ctx.fillStyle = 'rgba(100, 110, 70, 0.7)';
     }
 
-    // Beberapa bintik berukuran 2x2 untuk variasi
     if (Math.random() < 0.15) {
       ctx.fillRect(x, y, 2, 2);
     } else {
@@ -66,6 +63,8 @@ export function createForest(scene) {
   const leafGeo = new THREE.ConeGeometry(1.5, 3, 7);
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x1a2a1a });
 
+  const obstacles = [];
+
   for (let i = 0; i < 150; i++) {
     const tree = new THREE.Group();
 
@@ -82,11 +81,18 @@ export function createForest(scene) {
 
     const angle = Math.random() * Math.PI * 2;
     const dist = 8 + Math.random() * 92;
-    tree.position.set(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
+    const x = Math.cos(angle) * dist;
+    const z = Math.sin(angle) * dist;
+    tree.position.set(x, 0, z);
     tree.rotation.y = Math.random() * Math.PI * 2;
     const s = 0.7 + Math.random() * 0.8;
     tree.scale.set(s, s, s);
 
     scene.add(tree);
+
+    // Simpan posisi pohon sebagai obstacle
+    obstacles.push({ x, z, radius: 0.5 * s });
   }
+
+  return obstacles;
 }
