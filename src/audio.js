@@ -1,25 +1,50 @@
 export class ForestAudio {
   constructor() {
     this.audio = null;
+    this.menuMusic = null;
     this.started = false;
+    this.menuStarted = false;
     this.pendingStart = false;
 
-    // Pause saat app jadi background
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        this.pause();
-      } else if (this.started) {
-        this.resume();
+        this.pauseAll();
+      } else {
+        this.resumeAll();
       }
     });
 
-    // Pause saat window blur (buat kasus tertentu)
-    window.addEventListener('blur', () => this.pause());
-    window.addEventListener('focus', () => {
-      if (this.started) this.resume();
+    window.addEventListener('blur', () => this.pauseAll());
+    window.addEventListener('focus', () => this.resumeAll());
+  }
+
+  // ===== MUSIK MENU =====
+  startMenuMusic() {
+    if (this.menuStarted) return;
+
+    if (!this.menuMusic) {
+      this.menuMusic = new Audio('./assets/sound/lobby-creepy.mp3');
+      this.menuMusic.loop = true;
+      this.menuMusic.volume = 0.35;
+      this.menuMusic.preload = 'auto';
+    }
+
+    this.menuMusic.play().then(() => {
+      this.menuStarted = true;
+    }).catch(() => {
+      // Autoplay diblokir — tunggu gesture
     });
   }
 
+  stopMenuMusic() {
+    if (this.menuMusic && !this.menuMusic.paused) {
+      this.menuMusic.pause();
+      this.menuMusic.currentTime = 0;
+      this.menuStarted = false;
+    }
+  }
+
+  // ===== AMBIENCE HUTAN =====
   tryStart() {
     if (this.started) return;
     if (!this.audio) {
@@ -56,19 +81,20 @@ export class ForestAudio {
     });
   }
 
-  pause() {
-    if (this.audio && !this.audio.paused) {
-      this.audio.pause();
-    }
+  // ===== KONTROL =====
+  pauseAll() {
+    if (this.menuMusic && !this.menuMusic.paused) this.menuMusic.pause();
+    if (this.audio && !this.audio.paused) this.audio.pause();
   }
 
-  resume() {
-    if (this.audio && this.audio.paused) {
+  resumeAll() {
+    if (this.menuStarted && this.menuMusic && this.menuMusic.paused) {
+      this.menuMusic.play().catch(() => {});
+    }
+    if (this.started && this.audio && this.audio.paused) {
       this.audio.play().catch(() => {});
     }
   }
 
-  update(dt) {
-    // Tidak ada yang perlu di-update
-  }
+  update(dt) {}
 }
