@@ -76,13 +76,21 @@ try {
     renderer.render(scene, camera);
   }
 
-  const startAudioOnce = () => {
-    audio.start();
-    document.removeEventListener('touchstart', startAudioOnce);
-    document.removeEventListener('click', startAudioOnce);
+  // Coba autoplay langsung
+  audio.tryStart();
+
+  // Listener cadangan kalau autoplay diblokir
+  const onFirstGesture = () => {
+    audio.forceStart();
+    document.removeEventListener('pointerdown', onFirstGesture);
+    document.removeEventListener('touchstart', onFirstGesture);
+    document.removeEventListener('click', onFirstGesture);
+    document.removeEventListener('keydown', onFirstGesture);
   };
-  document.addEventListener('touchstart', startAudioOnce);
-  document.addEventListener('click', startAudioOnce);
+  document.addEventListener('pointerdown', onFirstGesture, { passive: true });
+  document.addEventListener('touchstart', onFirstGesture, { passive: true });
+  document.addEventListener('click', onFirstGesture);
+  document.addEventListener('keydown', onFirstGesture);
 
   animate();
 
