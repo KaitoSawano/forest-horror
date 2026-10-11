@@ -1,9 +1,10 @@
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
 export class PlayerControls {
-  constructor(camera, domElement, obstacles) {
+  constructor(camera, domElement, obstacles, mapBoundary) {
     this.camera = camera;
-    this.obstacles = obstacles || []; // array of {x, z, radius}
+    this.obstacles = obstacles || [];
+    this.mapBoundary = mapBoundary || 240;
     this.keys = {};
     this.yaw = 0;
     this.pitch = 0;
@@ -128,15 +129,22 @@ export class PlayerControls {
 
     if (move.length() > 0) move.normalize().multiplyScalar(speed * dt);
 
-    // Cek collision sebelum apply movement
-    const newX = this.camera.position.x + move.x;
-    const newZ = this.camera.position.z + move.z;
+    let newX = this.camera.position.x + move.x;
+    let newZ = this.camera.position.z + move.z;
 
+    // Cek dinding tak terlihat (batas map)
+    const B = this.mapBoundary;
+    if (newX > B) newX = B;
+    if (newX < -B) newX = -B;
+    if (newZ > B) newZ = B;
+    if (newZ < -B) newZ = -B;
+
+    // Cek collision dengan pohon
     if (!this.isBlocked(newX, newZ)) {
       this.camera.position.x = newX;
       this.camera.position.z = newZ;
     } else {
-      // Coba geser hanya di sumbu X atau Z saja (sliding)
+      // Sliding: coba geser hanya di sumbu X atau Z
       if (!this.isBlocked(newX, this.camera.position.z)) {
         this.camera.position.x = newX;
       } else if (!this.isBlocked(this.camera.position.x, newZ)) {
