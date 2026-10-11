@@ -16,6 +16,8 @@ window.addEventListener('error', (e) => showError('ERROR: ' + e.message));
 window.addEventListener('unhandledrejection', (e) => showError('REJECT: ' + (e.reason?.message || e.reason)));
 
 try {
+  const canvas = document.getElementById('game');
+
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
   scene.fog = new THREE.FogExp2(0x000000, 0.12);
@@ -28,15 +30,17 @@ try {
   );
   camera.position.set(0, 1.7, 0);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: false });
+  const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: false,
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  document.body.appendChild(renderer.domElement);
 
   createForest(scene);
   createLighting(scene);
 
-  const controls = new PlayerControls(camera, renderer.domElement);
+  const controls = new PlayerControls(camera, canvas);
   const flashlight = new Flashlight(camera);
   const hud = new HUD();
 
