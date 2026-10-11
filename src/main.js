@@ -40,12 +40,14 @@ try {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  // createForest mengembalikan array obstacles
   const obstacles = createForest(scene);
   createLighting(scene);
 
-  // Kirim obstacles ke PlayerControls
-  const controls = new PlayerControls(camera, canvas, obstacles);
+  // Batas map — setengah dari ukuran plane (500 / 2 = 250)
+  // Dikurangi sedikit biar pemain tidak sampai ujung plane
+  const MAP_BOUNDARY = 240;
+
+  const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
   const hud = new HUD();
 
