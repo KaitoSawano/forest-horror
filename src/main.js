@@ -6,6 +6,7 @@ import { Flashlight } from './battery.js';
 import { HUD } from './ui.js';
 import { ForestAudio } from './audio.js';
 import { BookManager } from './books.js';
+import { createHouse } from './house.js';
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -46,6 +47,8 @@ try {
 
   const obstacles = createForest(scene);
   createLighting(scene);
+
+  createHouse(scene, obstacles, MAP_BOUNDARY);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
