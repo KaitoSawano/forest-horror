@@ -1,4 +1,4 @@
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import * as THREE from 'three';
 
 export class PlayerControls {
   constructor(camera, domElement, obstacles, mapBoundary) {
@@ -132,19 +132,16 @@ export class PlayerControls {
     let newX = this.camera.position.x + move.x;
     let newZ = this.camera.position.z + move.z;
 
-    // Cek dinding tak terlihat (batas map)
     const B = this.mapBoundary;
     if (newX > B) newX = B;
     if (newX < -B) newX = -B;
     if (newZ > B) newZ = B;
     if (newZ < -B) newZ = -B;
 
-    // Cek collision dengan pohon
     if (!this.isBlocked(newX, newZ)) {
       this.camera.position.x = newX;
       this.camera.position.z = newZ;
     } else {
-      // Sliding: coba geser hanya di sumbu X atau Z
       if (!this.isBlocked(newX, this.camera.position.z)) {
         this.camera.position.x = newX;
       } else if (!this.isBlocked(this.camera.position.x, newZ)) {
