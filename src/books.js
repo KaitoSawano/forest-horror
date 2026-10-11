@@ -10,7 +10,6 @@ export class BookManager {
     this.total = 7;
     this.onAllCollected = null;
 
-    // Buku kecil, gelap, tidak mencolok
     this.geometry = new THREE.BoxGeometry(0.25, 0.35, 0.08);
     this.material = new THREE.MeshStandardMaterial({
       color: 0x551111,
@@ -28,12 +27,10 @@ export class BookManager {
       attempts++;
 
       const angle = Math.random() * Math.PI * 2;
-      // Minimal 25 unit dari pusat, maksimal dekat batas map
       const dist = 25 + Math.random() * (this.mapBoundary - 30);
       const x = Math.cos(angle) * dist;
       const z = Math.sin(angle) * dist;
 
-      // Cek tidak nabrak pohon
       let blocked = false;
       for (const obs of this.obstacles) {
         const dx = x - obs.x;
@@ -45,7 +42,6 @@ export class BookManager {
       }
       if (blocked) continue;
 
-      // Cek tidak terlalu dekat buku lain (min 15 unit)
       let tooClose = false;
       for (const b of this.books) {
         const dx = x - b.mesh.position.x;
@@ -59,14 +55,11 @@ export class BookManager {
 
       const mesh = new THREE.Mesh(this.geometry, this.material);
       mesh.position.set(x, 0.3, z);
-      // Buku bisa menghadap arah acak
       mesh.rotation.y = Math.random() * Math.PI * 2;
-      // Kadang buku miring (seperti jatuh)
       mesh.rotation.x = (Math.random() - 0.5) * 0.4;
       mesh.rotation.z = (Math.random() - 0.5) * 0.4;
       mesh.castShadow = true;
 
-      // Cahaya sangat redup — cuma terlihat saat dekat
       const light = new THREE.PointLight(0xff1111, 0.4, 2.5, 2);
       light.position.set(0, 0, 0);
       mesh.add(light);
@@ -81,7 +74,6 @@ export class BookManager {
       const book = this.books[i];
       if (book.collected) continue;
 
-      // Cek jarak ke pemain — harus benar-benar dekat untuk ambil
       const dx = playerPos.x - book.mesh.position.x;
       const dz = playerPos.z - book.mesh.position.z;
       const dist = Math.sqrt(dx * dx + dz * dz);
