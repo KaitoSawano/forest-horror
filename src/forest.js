@@ -65,7 +65,7 @@ export function createForest(scene) {
 
   const obstacles = [];
 
-  for (let i = 0; i < 150; i++) {
+  for (let i = 0; i < 60; i++) {
     const tree = new THREE.Group();
 
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
@@ -80,7 +80,7 @@ export function createForest(scene) {
     tree.add(leaves);
 
     const angle = Math.random() * Math.PI * 2;
-    const dist = 8 + Math.random() * 92;
+    const dist = 5 + Math.random() * 75;
     const x = Math.cos(angle) * dist;
     const z = Math.sin(angle) * dist;
     tree.position.set(x, 0, z);
@@ -90,7 +90,6 @@ export function createForest(scene) {
 
     scene.add(tree);
 
-    // Simpan posisi pohon sebagai obstacle
     obstacles.push({ x, z, radius: 0.5 * s });
   }
 
