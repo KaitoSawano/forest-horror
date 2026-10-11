@@ -48,7 +48,7 @@ try {
   const obstacles = createForest(scene);
   createLighting(scene);
 
-  createHouse(scene, obstacles, MAP_BOUNDARY);
+  // createHouse(scene, obstacles, MAP_BOUNDARY);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
