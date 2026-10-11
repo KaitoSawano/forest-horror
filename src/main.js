@@ -5,6 +5,7 @@ import { PlayerControls } from './controls.js';
 import { Flashlight } from './battery.js';
 import { HUD } from './ui.js';
 import { ForestAudio } from './audio.js';
+import { BookManager } from './books.js';
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -51,10 +52,23 @@ try {
   const hud = new HUD();
   const audio = new ForestAudio();
 
+  const books = new BookManager(scene, obstacles, MAP_BOUNDARY);
+
   const state = {
     playerPos: new THREE.Vector3(0, 1.7, 0),
     time: 7 * 60,
     hp: 100,
+    books: {
+      collected: 0,
+      total: books.getTotal(),
+    },
+  };
+
+  books.onAllCollected = () => {
+    gameStarted = false;
+    const overlay = document.getElementById('gameover-overlay');
+    if (overlay) overlay.classList.add('visible');
+    audio.pauseAll();
   };
 
   let gameStarted = false;
@@ -92,10 +106,15 @@ try {
     }
   });
 
-  // Coba start menu music
+  const restartBtn = document.getElementById('btn-restart');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => {
+      location.reload();
+    });
+  }
+
   audio.startMenuMusic();
 
-  // Kalau autoplay diblokir, tunggu gesture pertama
   const onFirstGesture = () => {
     if (!audio.menuStarted) audio.startMenuMusic();
     document.removeEventListener('pointerdown', onFirstGesture);
@@ -117,6 +136,8 @@ try {
     if (gameStarted) {
       controls.update(dt, state);
       flashlight.update(dt, state, hud);
+      books.update(dt, state.playerPos);
+      state.books.collected = books.getCollected();
       hud.update(state);
       state.time = (state.time + dt * 60) % (24 * 60);
     }
