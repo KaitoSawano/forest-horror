@@ -6,7 +6,7 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
   return new Promise((resolve) => {
     loader.load(
-      './assets/house-ready.glb',
+      './assets/house1.glb',
       (gltf) => {
         const house = gltf.scene;
 
@@ -46,7 +46,7 @@ export function createHouse(scene, obstacles, mapBoundary) {
       },
       undefined,
       (err) => {
-        console.warn('Gagal load house-ready.glb:', err);
+        console.warn('Gagal load house1.glb:', err);
         resolve(null);
       }
     );
