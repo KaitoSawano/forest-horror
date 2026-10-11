@@ -48,7 +48,6 @@ try {
   const obstacles = createForest(scene);
   createLighting(scene);
 
-  // Rumah terbengkalai
   createHouse(scene, obstacles, MAP_BOUNDARY);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
@@ -75,7 +74,6 @@ try {
     audio.pauseAll();
   };
 
-  // ===== MENU LOGIC =====
   let gameStarted = false;
 
   const menuEl = document.getElementById('menu');
@@ -119,7 +117,6 @@ try {
     location.reload();
   });
 
-  // ===== MULAI MUSIK MENU =====
   audio.startMenuMusic();
 
   const onFirstGesture = () => {
@@ -132,7 +129,6 @@ try {
   document.addEventListener('touchstart', onFirstGesture, { passive: true });
   document.addEventListener('click', onFirstGesture);
 
-  // ===== GAME LOOP =====
   const clock = new THREE.Clock();
   let firstFrame = true;
 
