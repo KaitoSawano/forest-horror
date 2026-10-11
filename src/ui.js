@@ -3,7 +3,6 @@ export class HUD {
     this.posEl = document.getElementById('hud-pos');
     this.timeEl = document.getElementById('hud-time');
     this.hpEl = document.getElementById('hud-hp');
-    this.booksEl = document.getElementById('hud-books');
   }
 
   update(state) {
@@ -24,15 +23,6 @@ export class HUD {
 
     if (this.hpEl) {
       this.hpEl.textContent = `HP: ${Math.floor(state.hp)}/100`;
-      if (state.hp < 30) {
-        this.hpEl.classList.add('low-hp');
-      } else {
-        this.hpEl.classList.remove('low-hp');
-      }
-    }
-
-    if (this.booksEl && state.books) {
-      this.booksEl.textContent = `Buku: ${state.books.collected}/${state.books.total}`;
     }
   }
 }
