@@ -4,7 +4,7 @@ import { DRACOLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loader
 
 export function createHouse(scene, obstacles, mapBoundary) {
   const dracoLoader = new DRACOLoader();
-  dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+  dracoLoader.setDecoderPath('./assets/draco/');
 
   const loader = new GLTFLoader();
   loader.setDRACOLoader(dracoLoader);
@@ -15,7 +15,6 @@ export function createHouse(scene, obstacles, mapBoundary) {
       (gltf) => {
         const house = gltf.scene;
 
-        // Posisi: jauh dari spawn, di pinggir hutan
         const angle = Math.PI * 0.75;
         const dist = 60;
         const houseX = Math.cos(angle) * dist;
@@ -23,14 +22,11 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         house.position.set(houseX, 0, houseZ);
 
-        // Skala
         const scale = 2.5;
         house.scale.set(scale, scale, scale);
 
-        // Rotasi supaya pintu menghadap ke arah spawn
         house.rotation.y = -angle + Math.PI / 2;
 
-        // Aktifkan shadow
         house.traverse((child) => {
           if (child.isMesh) {
             child.castShadow = true;
@@ -40,14 +36,12 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         scene.add(house);
 
-        // Obstacle
         obstacles.push({
           x: houseX,
           z: houseZ,
           radius: 5 * scale / 2,
         });
 
-        // Cahaya redup dari dalam rumah
         const houseLight = new THREE.PointLight(0xff8844, 1.2, 12, 2);
         houseLight.position.set(houseX, 3 * scale, houseZ);
         scene.add(houseLight);
