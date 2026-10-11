@@ -20,7 +20,7 @@ try {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  scene.fog = new THREE.FogExp2(0x000000, 0.12);
+  scene.fog = new THREE.FogExp2(0x000000, 0.06);
 
   const camera = new THREE.PerspectiveCamera(
     75,
@@ -29,13 +29,16 @@ try {
     100
   );
   camera.position.set(0, 1.7, 0);
+  scene.add(camera);
 
   const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
-    antialias: false,
+    antialias: true,
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   createForest(scene);
   createLighting(scene);
