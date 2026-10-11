@@ -2,19 +2,45 @@ export class ForestAudio {
   constructor() {
     this.audio = null;
     this.started = false;
+    this.pendingStart = false;
   }
 
-  start() {
+  // Coba play langsung saat game load
+  tryStart() {
     if (this.started) return;
-    this.started = true;
+    if (!this.audio) {
+      this.audio = new Audio('./assets/sound/night-forest.mp3');
+      this.audio.loop = true;
+      this.audio.volume = 0.4;
+      this.audio.preload = 'auto';
+    }
 
-    this.audio = new Audio('./assets/sound/night-forest.mp3');
-    this.audio.loop = true;
-    this.audio.volume = 0.4;
+    const promise = this.audio.play();
+    if (promise) {
+      promise.then(() => {
+        this.started = true;
+      }).catch(() => {
+        // Browser blokir autoplay — tunggu user gesture
+        this.pendingStart = true;
+      });
+    }
+  }
 
-    this.audio.play().catch((err) => {
+  // Dipanggil saat user gesture pertama
+  forceStart() {
+    if (this.started) return;
+    if (!this.audio) {
+      this.audio = new Audio('./assets/sound/night-forest.mp3');
+      this.audio.loop = true;
+      this.audio.volume = 0.4;
+      this.audio.preload = 'auto';
+    }
+
+    this.audio.play().then(() => {
+      this.started = true;
+      this.pendingStart = false;
+    }).catch((err) => {
       console.warn('Audio gagal play:', err);
-      this.started = false;
     });
   }
 
