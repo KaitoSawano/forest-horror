@@ -8,7 +8,7 @@ export class ForestAudio {
     if (this.started) return;
     this.started = true;
 
-    this.audio = new Audio('./assets/night-forest.mp3');
+    this.audio = new Audio('./assets/sound/night-forest.mp3');
     this.audio.loop = true;
     this.audio.volume = 0.4;
 
