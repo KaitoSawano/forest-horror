@@ -40,10 +40,12 @@ try {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  createForest(scene);
+  // createForest mengembalikan array obstacles
+  const obstacles = createForest(scene);
   createLighting(scene);
 
-  const controls = new PlayerControls(camera, canvas);
+  // Kirim obstacles ke PlayerControls
+  const controls = new PlayerControls(camera, canvas, obstacles);
   const flashlight = new Flashlight(camera);
   const hud = new HUD();
 
