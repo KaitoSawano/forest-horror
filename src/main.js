@@ -52,7 +52,6 @@ try {
   const hud = new HUD();
   const audio = new ForestAudio();
 
-  // Buku
   const books = new BookManager(scene, obstacles, MAP_BOUNDARY);
 
   const state = {
@@ -66,11 +65,9 @@ try {
     },
   };
 
-  // Callback saat semua buku terkumpul
   books.onAllCollected = () => {
     gameStarted = false;
     document.getElementById('gameover-overlay').classList.add('visible');
-    audio.stopMenuMusic();
     audio.pauseAll();
   };
 
@@ -83,7 +80,6 @@ try {
   const crosshairEl = document.getElementById('crosshair');
   const hudEl = document.getElementById('hud');
   const helpOverlay = document.getElementById('help-overlay');
-  const gameoverOverlay = document.getElementById('gameover-overlay');
 
   document.getElementById('btn-play').addEventListener('click', () => {
     gameStarted = true;
@@ -146,7 +142,6 @@ try {
       flashlight.update(dt, state, hud);
       audio.update(dt);
 
-      // Update buku
       books.update(dt, state.playerPos);
       state.books.collected = books.getCollected();
 
@@ -164,12 +159,6 @@ try {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
-
-  showError('OK - Scene loaded');
-  setTimeout(() => {
-    const el = document.getElementById('debug');
-    if (el) el.style.display = 'none';
-  }, 3000);
 
 } catch (err) {
   showError('CATCH: ' + err.message);
