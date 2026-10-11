@@ -4,6 +4,7 @@ import { createLighting } from './lighting.js';
 import { PlayerControls } from './controls.js';
 import { Flashlight } from './battery.js';
 import { HUD } from './ui.js';
+import { ForestAudio } from './audio.js';
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -48,6 +49,7 @@ try {
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
   const hud = new HUD();
+  const audio = new ForestAudio();
 
   const state = {
     playerPos: new THREE.Vector3(0, 1.7, 0),
@@ -71,6 +73,9 @@ try {
     jumpBtnEl.style.display = 'block';
     crosshairEl.style.display = 'block';
     hudEl.classList.add('visible');
+
+    audio.stopMenuMusic();
+    audio.forceStart();
   });
 
   document.getElementById('btn-help').addEventListener('click', () => {
@@ -86,6 +91,20 @@ try {
       window.close();
     }
   });
+
+  // Coba start menu music
+  audio.startMenuMusic();
+
+  // Kalau autoplay diblokir, tunggu gesture pertama
+  const onFirstGesture = () => {
+    if (!audio.menuStarted) audio.startMenuMusic();
+    document.removeEventListener('pointerdown', onFirstGesture);
+    document.removeEventListener('touchstart', onFirstGesture);
+    document.removeEventListener('click', onFirstGesture);
+  };
+  document.addEventListener('pointerdown', onFirstGesture, { passive: true });
+  document.addEventListener('touchstart', onFirstGesture, { passive: true });
+  document.addEventListener('click', onFirstGesture);
 
   const clock = new THREE.Clock();
   let firstFrame = true;
