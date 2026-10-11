@@ -43,9 +43,7 @@ try {
   const obstacles = createForest(scene);
   createLighting(scene);
 
-  // Batas map — setengah dari ukuran plane (500 / 2 = 250)
-  // Dikurangi sedikit biar pemain tidak sampai ujung plane
-  const MAP_BOUNDARY = 240;
+  const MAP_BOUNDARY = 80;
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
