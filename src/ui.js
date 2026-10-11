@@ -20,7 +20,6 @@ export class HUD {
       `X: ${state.playerPos.x.toFixed(0)} | ` +
       `Z: ${state.playerPos.z.toFixed(0)} | ` +
       `Y: ${state.playerPos.y.toFixed(1)} | ` +
-      `${timeStr} | HP: ${Math.floor(state.hp)}/100 | ` +
-      `Baterai: ${Math.floor(state.battery)}%`;
+      `${timeStr} | HP: ${Math.floor(state.hp)}/100`;
   }
 }
