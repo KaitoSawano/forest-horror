@@ -48,7 +48,7 @@ try {
   const obstacles = createForest(scene);
   createLighting(scene);
 
-  // Rumah terbengkalai — jauh dari spawn
+  // Rumah terbengkalai
   createHouse(scene, obstacles, MAP_BOUNDARY);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
