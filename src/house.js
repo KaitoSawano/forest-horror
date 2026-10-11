@@ -1,8 +1,13 @@
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/DRACOLoader.js';
 
 export function createHouse(scene, obstacles, mapBoundary) {
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+
   const loader = new GLTFLoader();
+  loader.setDRACOLoader(dracoLoader);
 
   return new Promise((resolve) => {
     loader.load(
@@ -11,7 +16,6 @@ export function createHouse(scene, obstacles, mapBoundary) {
         const house = gltf.scene;
 
         // Posisi: jauh dari spawn, di pinggir hutan
-        // Sudut 135° (barat daya), jarak 60 unit dari pusat
         const angle = Math.PI * 0.75;
         const dist = 60;
         const houseX = Math.cos(angle) * dist;
@@ -19,7 +23,7 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         house.position.set(houseX, 0, houseZ);
 
-        // Skala — sesuaikan kalau rumahnya terlalu besar/kecil
+        // Skala
         const scale = 2.5;
         house.scale.set(scale, scale, scale);
 
@@ -36,7 +40,7 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         scene.add(house);
 
-        // Obstacle: rumah tidak bisa ditembus
+        // Obstacle
         obstacles.push({
           x: houseX,
           z: houseZ,
