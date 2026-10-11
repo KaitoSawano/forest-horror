@@ -107,8 +107,6 @@ html, body {
   display: none;
 }
 
-/* ===== MENU UTAMA ===== */
-
 #menu {
   position: fixed;
   top: 0; left: 0;
@@ -182,8 +180,6 @@ html, body {
   transform: scale(0.97);
 }
 
-/* ===== HELP OVERLAY ===== */
-
 #help-overlay {
   position: fixed;
   top: 0; left: 0;
@@ -235,8 +231,6 @@ html, body {
 #help-close:active {
   background: rgba(60, 0, 0, 0.9);
 }
-
-/* ===== GAME OVER OVERLAY ===== */
 
 #gameover-overlay {
   position: fixed;
