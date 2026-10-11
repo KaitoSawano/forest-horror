@@ -31,31 +31,49 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         scene.add(house);
 
-        // Collision: cuma 4 titik sudut rumah (pojok), biar pintu tetap bisa dilewati
-        // Ukuran rumah ~10 x 10 unit setelah scale
-        const halfW = 4.5;
-        const halfD = 4.5;
-        const rot = house.rotation.y;
+        // === HITUNG BOUNDING BOX OTOMATIS ===
+        const box = new THREE.Box3().setFromObject(house);
+        const min = box.min;
+        const max = box.max;
 
-        // Pojok-pojok rumah dalam koordinat lokal
-        const corners = [
-          { x: -halfW, z: -halfD },
-          { x:  halfW, z: -halfD },
-          { x: -halfW, z:  halfD },
-          { x:  halfW, z:  halfD },
-        ];
+        // Ukuran setelah di-scale
+        const width = max.x - min.x;
+        const depth = max.z - min.z;
 
-        for (const c of corners) {
-          // Rotasi pojok sesuai rotasi rumah
-          const rx = c.x * Math.cos(rot) - c.z * Math.sin(rot);
-          const rz = c.x * Math.sin(rot) + c.z * Math.cos(rot);
+        // Titik tengah
+        const centerX = (min.x + max.x) / 2;
+        const centerZ = (min.z + max.z) / 2;
 
-          obstacles.push({
-            x: houseX + rx,
-            z: houseZ + rz,
-            radius: 1.5,
-          });
-        }
+        console.log('Ukuran rumah:', width.toFixed(2), 'x', depth.toFixed(2));
+
+        // Buat obstacle di 4 sisi (dinding), dengan celah di sisi depan (pintu)
+        const wallThickness = 0.8;
+        const holeSize = 3.0; // ukuran celah pintu
+
+        // Sisi kiri (barat)
+        obstacles.push({
+          x: centerX - width / 2 + wallThickness / 2,
+          z: centerZ,
+          radius: depth / 2,
+        });
+
+        // Sisi kanan (timur)
+        obstacles.push({
+          x: centerX + width / 2 - wallThickness / 2,
+          z: centerZ,
+          radius: depth / 2,
+        });
+
+        // Sisi belakang (utara)
+        obstacles.push({
+          x: centerX,
+          z: centerZ - depth / 2 + wallThickness / 2,
+          radius: width / 2,
+        });
+
+        // Sisi depan (selatan) — dibagi 2 karena ada pintu di tengah
+        // Tapi karena rumah dirotasi, kita tidak bisa pakai koordinat langsung.
+        // Solusi: jangan tambah obstacle di sisi depan, biar pintu bisa dilewati.
 
         const houseLight = new THREE.PointLight(0xff8844, 1.2, 12, 2);
         houseLight.position.set(houseX, 3 * scale, houseZ);
