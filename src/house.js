@@ -31,11 +31,31 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         scene.add(house);
 
-        obstacles.push({
-          x: houseX,
-          z: houseZ,
-          radius: 5 * scale / 2,
-        });
+        // Collision: cuma 4 titik sudut rumah (pojok), biar pintu tetap bisa dilewati
+        // Ukuran rumah ~10 x 10 unit setelah scale
+        const halfW = 4.5;
+        const halfD = 4.5;
+        const rot = house.rotation.y;
+
+        // Pojok-pojok rumah dalam koordinat lokal
+        const corners = [
+          { x: -halfW, z: -halfD },
+          { x:  halfW, z: -halfD },
+          { x: -halfW, z:  halfD },
+          { x:  halfW, z:  halfD },
+        ];
+
+        for (const c of corners) {
+          // Rotasi pojok sesuai rotasi rumah
+          const rx = c.x * Math.cos(rot) - c.z * Math.sin(rot);
+          const rz = c.x * Math.sin(rot) + c.z * Math.cos(rot);
+
+          obstacles.push({
+            x: houseX + rx,
+            z: houseZ + rz,
+            radius: 1.5,
+          });
+        }
 
         const houseLight = new THREE.PointLight(0xff8844, 1.2, 12, 2);
         houseLight.position.set(houseX, 3 * scale, houseZ);
