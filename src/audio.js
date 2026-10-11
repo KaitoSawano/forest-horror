@@ -3,9 +3,23 @@ export class ForestAudio {
     this.audio = null;
     this.started = false;
     this.pendingStart = false;
+
+    // Pause saat app jadi background
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.pause();
+      } else if (this.started) {
+        this.resume();
+      }
+    });
+
+    // Pause saat window blur (buat kasus tertentu)
+    window.addEventListener('blur', () => this.pause());
+    window.addEventListener('focus', () => {
+      if (this.started) this.resume();
+    });
   }
 
-  // Coba play langsung saat game load
   tryStart() {
     if (this.started) return;
     if (!this.audio) {
@@ -20,13 +34,11 @@ export class ForestAudio {
       promise.then(() => {
         this.started = true;
       }).catch(() => {
-        // Browser blokir autoplay — tunggu user gesture
         this.pendingStart = true;
       });
     }
   }
 
-  // Dipanggil saat user gesture pertama
   forceStart() {
     if (this.started) return;
     if (!this.audio) {
@@ -42,6 +54,18 @@ export class ForestAudio {
     }).catch((err) => {
       console.warn('Audio gagal play:', err);
     });
+  }
+
+  pause() {
+    if (this.audio && !this.audio.paused) {
+      this.audio.pause();
+    }
+  }
+
+  resume() {
+    if (this.audio && this.audio.paused) {
+      this.audio.play().catch(() => {});
+    }
   }
 
   update(dt) {
