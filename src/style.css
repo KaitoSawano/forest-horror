@@ -114,17 +114,17 @@ html, body {
   width: 55px;
   height: 55px;
   border-radius: 8px;
-  border: 2px solid #cc4444;
-  background-color: rgba(40, 25, 15, 0.85);
+  border: none;
+  background-color: rgba(40, 25, 15, 0.6);
   background-image: url('./ui/map-icon.png');
-  background-size: 80%;
+  background-size: 60%;
   background-repeat: no-repeat;
   background-position: center;
   z-index: 250;
   cursor: pointer;
   display: none;
-  box-shadow: 0 0 15px rgba(100, 60, 30, 0.5);
   padding: 0;
+  box-shadow: none;
 }
 
 #map-btn:active {
