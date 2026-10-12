@@ -11,7 +11,7 @@ export function createGraveyard(scene, obstacles, mapBoundary) {
         const graveyard = gltf.scene;
 
         const angle = Math.PI * 0.25;
-        const dist = 50;
+        const dist = 20;
         const graveX = Math.cos(angle) * dist;
         const graveZ = Math.sin(angle) * dist;
 
