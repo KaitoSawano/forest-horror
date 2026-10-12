@@ -64,6 +64,7 @@ export function createForest(scene) {
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x1a2a1a });
 
   const obstacles = [];
+  const treeData = [];
 
   for (let i = 0; i < 100; i++) {
     const tree = new THREE.Group();
@@ -91,7 +92,14 @@ export function createForest(scene) {
     scene.add(tree);
 
     obstacles.push({ x, z, radius: 0.5 * s });
+
+    // Simpan data pohon untuk minimap
+    treeData.push({
+      x,
+      z,
+      size: 2 + s * 2,   // ukuran di peta
+    });
   }
 
-  return obstacles;
+  return { obstacles, trees: treeData };
 }
