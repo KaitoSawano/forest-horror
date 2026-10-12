@@ -43,7 +43,7 @@ try {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  const MAP_BOUNDARY = 80;
+  const MAP_BOUNDARY = 120;
 
   const obstacles = createForest(scene);
   createLighting(scene);
