@@ -6,12 +6,12 @@ export function createGraveyard(scene, obstacles, mapBoundary) {
 
   return new Promise((resolve) => {
     loader.load(
-      './assets/graveyard.glb',
+      './assets/graveyard2.glb',
       (gltf) => {
         const graveyard = gltf.scene;
 
         const angle = Math.PI * 0.25;
-        const dist = 20;
+        const dist = 35;
         const graveX = Math.cos(angle) * dist;
         const graveZ = Math.sin(angle) * dist;
 
@@ -22,7 +22,6 @@ export function createGraveyard(scene, obstacles, mapBoundary) {
 
         graveyard.rotation.y = angle + Math.PI;
 
-        // Jangan override material — biarkan tekstur asli muncul
         graveyard.traverse((child) => {
           if (child.isMesh) {
             child.castShadow = true;
@@ -41,7 +40,7 @@ export function createGraveyard(scene, obstacles, mapBoundary) {
       },
       undefined,
       (err) => {
-        console.warn('Gagal load graveyard.glb:', err);
+        console.warn('Gagal load graveyard2.glb:', err);
         resolve(null);
       }
     );
