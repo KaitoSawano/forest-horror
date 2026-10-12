@@ -8,6 +8,7 @@ import { ForestAudio } from './audio.js';
 import { BookManager } from './books.js';
 import { createHouse } from './house.js';
 import { createGraveyard } from './graveyard.js';
+import { Minimap } from './minimap.js';
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -49,13 +50,11 @@ try {
   const obstacles = createForest(scene);
   createLighting(scene);
 
-  createHouse(scene, obstacles, MAP_BOUNDARY);
-  createGraveyard(scene, obstacles, MAP_BOUNDARY);
-
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
   const hud = new HUD();
   const audio = new ForestAudio();
+  const minimap = new Minimap(MAP_BOUNDARY);
 
   const books = new BookManager(scene, obstacles, MAP_BOUNDARY);
 
@@ -63,11 +62,29 @@ try {
     playerPos: new THREE.Vector3(0, 1.7, 0),
     time: 7 * 60,
     hp: 100,
+    yaw: 0,
     books: {
       collected: 0,
       total: books.getTotal(),
     },
   };
+
+  createHouse(scene, obstacles, MAP_BOUNDARY).then((house) => {
+    if (house) minimap.setHouse(house.position.x, house.position.z);
+  });
+
+  createGraveyard(scene, obstacles, MAP_BOUNDARY).then((grave) => {
+    if (grave) {
+      const box = new THREE.Box3().setFromObject(grave);
+      const size = box.getSize(new THREE.Vector3());
+      const maxSize = Math.max(size.x, size.z);
+      minimap.setGraveyard(grave.position.x, grave.position.z, maxSize / 2);
+    }
+  });
+
+  setTimeout(() => {
+    minimap.setBooks(books.books);
+  }, 1000);
 
   books.onAllCollected = () => {
     gameStarted = false;
@@ -92,6 +109,7 @@ try {
     jumpBtnEl.style.display = 'block';
     crosshairEl.style.display = 'block';
     hudEl.classList.add('visible');
+    minimap.show();
 
     audio.stopMenuMusic();
     audio.forceStart();
@@ -143,6 +161,7 @@ try {
       flashlight.update(dt, state, hud);
       books.update(dt, state.playerPos);
       state.books.collected = books.getCollected();
+      minimap.update(state);
       hud.update(state);
       state.time = (state.time + dt * 60) % (24 * 60);
     }
