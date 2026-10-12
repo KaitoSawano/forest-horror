@@ -11,7 +11,6 @@ export class PlayerControls {
     this.moveX = 0;
     this.moveY = 0;
 
-    // Lompat
     this.velocityY = 0;
     this.isJumping = false;
     this.groundY = 1.7;
@@ -180,7 +179,6 @@ export class PlayerControls {
       }
     }
 
-    // === LOGIKA LOMPAT ===
     if (this.isJumping) {
       this.velocityY += this.gravity * dt;
       this.camera.position.y += this.velocityY * dt;
@@ -223,7 +221,7 @@ export class PlayerControls {
   }
 
   isHouseBlocked(x, z, house, playerRadius) {
-    // Transformasi posisi pemain ke koordinat lokal rumah
+    // Transformasi ke koordinat lokal rumah
     const dx = x - house.centerX;
     const dz = z - house.centerZ;
 
@@ -233,42 +231,44 @@ export class PlayerControls {
     const localX = dx * cos - dz * sin;
     const localZ = dx * sin + dz * cos;
 
-    // Cek apakah pemain di dalam area rumah (dengan margin)
+    // Di luar area rumah? Bebas.
     const insideX = Math.abs(localX) < house.halfW + playerRadius;
     const insideZ = Math.abs(localZ) < house.halfD + playerRadius;
-
-    // Kalau di luar area rumah, tidak diblokir
     if (!insideX || !insideZ) return false;
 
-    // Pemain ada di dalam area rumah.
-    // Sekarang cek: apakah di area dinding atau di area pintu/jendela?
-
-    // === PINTU ===
-    // Asumsi pintu ada di sisi +Z lokal (sisi veranda)
-    // Kalau pemain di dekat sisi +Z lokal dan di tengah (dekat X=0), boleh lewat
+    // === CEK PINTU ===
+    // Pintu ada di sisi +Z lokal (sisi veranda)
     if (
-      Math.abs(localZ - house.halfD) < 2.0 &&
+      localZ > house.halfD - 2.0 &&
       Math.abs(localX) < house.doorWidth / 2
     ) {
-      return false; // boleh lewat pintu
+      return false; // boleh masuk lewat pintu
     }
 
-    // === JENDELA ===
-    // Jendela ada di sisi +Z lokal juga, di kiri dan kanan pintu
-    // Kita bikin 2 celah jendela
-    const windowLeftX = -5.5;
-    const windowRightX = 5.5;
-
-    if (Math.abs(localZ - house.halfD) < 2.0) {
-      if (
-        Math.abs(localX - windowLeftX) < house.windowWidth / 2 ||
-        Math.abs(localX - windowRightX) < house.windowWidth / 2
-      ) {
-        return false; // boleh lewat jendela
+    // === CEK JENDELA ===
+    // Jendela ada di sisi +X lokal (sisi panjang)
+    if (localX > house.halfW - 2.0) {
+      // Jendela 1
+      if (Math.abs(localZ - house.window1Z) < house.windowWidth / 2) {
+        return false;
+      }
+      // Jendela 2
+      if (Math.abs(localZ - house.window2Z) < house.windowWidth / 2) {
+        return false;
       }
     }
 
-    // Kalau di area dinding (bukan pintu/jendela), blokir
+    // === CEK JENDELA SISI SEBELAH ===
+    if (localX < -(house.halfW - 2.0)) {
+      if (Math.abs(localZ - house.window1Z) < house.windowWidth / 2) {
+        return false;
+      }
+      if (Math.abs(localZ - house.window2Z) < house.windowWidth / 2) {
+        return false;
+      }
+    }
+
+    // Selain pintu dan jendela → dinding → blokir
     return true;
   }
 }
