@@ -20,8 +20,7 @@ export function createHouse(scene, obstacles, mapBoundary) {
         const scale = 2.5;
         house.scale.set(scale, scale, scale);
 
-        const rotation = -angle + Math.PI / 2;
-        house.rotation.y = rotation;
+        house.rotation.y = -angle + Math.PI / 2;
 
         house.traverse((child) => {
           if (child.isMesh) {
@@ -32,23 +31,7 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         scene.add(house);
 
-        // Hitung bounding box setelah di-scale dan diposisikan
-        const box = new THREE.Box3().setFromObject(house);
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-
-        console.log('Ukuran rumah:', size.x.toFixed(2), 'x', size.z.toFixed(2));
-
-        // Simpan info rumah sebagai obstacle khusus
-        obstacles.push({
-          type: 'box',
-          centerX: center.x,
-          centerZ: center.z,
-          halfW: size.x / 2,
-          halfD: size.z / 2,
-          rotation: rotation,
-          doorWidth: 3.0,
-        });
+        // Tidak ada collision — pemain bisa masuk-keluar bebas
 
         const houseLight = new THREE.PointLight(0xff8844, 1.2, 12, 2);
         houseLight.position.set(houseX, 3 * scale, houseZ);
