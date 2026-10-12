@@ -199,76 +199,16 @@ export class PlayerControls {
 
   isBlocked(x, z) {
     const playerRadius = 0.5;
-
     for (const obs of this.obstacles) {
-      if (obs.type === 'house') {
-        if (this.isHouseBlocked(x, z, obs, playerRadius)) {
-          return true;
-        }
-      } else if (obs.type === 'mesh' || obs.type === 'box') {
-        continue;
-      } else {
-        const dx = x - obs.x;
-        const dz = z - obs.z;
-        const dist = Math.sqrt(dx * dx + dz * dz);
-        if (dist < obs.radius + playerRadius) {
-          return true;
-        }
+      if (obs.type === 'house' || obs.type === 'mesh' || obs.type === 'box') continue;
+
+      const dx = x - obs.x;
+      const dz = z - obs.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < obs.radius + playerRadius) {
+        return true;
       }
     }
-
     return false;
-  }
-
-  isHouseBlocked(x, z, house, playerRadius) {
-    // Transformasi ke koordinat lokal rumah
-    const dx = x - house.centerX;
-    const dz = z - house.centerZ;
-
-    const cos = Math.cos(-house.rotation);
-    const sin = Math.sin(-house.rotation);
-
-    const localX = dx * cos - dz * sin;
-    const localZ = dx * sin + dz * cos;
-
-    // Di luar area rumah? Bebas.
-    const insideX = Math.abs(localX) < house.halfW + playerRadius;
-    const insideZ = Math.abs(localZ) < house.halfD + playerRadius;
-    if (!insideX || !insideZ) return false;
-
-    // === CEK PINTU ===
-    // Pintu ada di sisi +Z lokal (sisi veranda)
-    if (
-      localZ > house.halfD - 2.0 &&
-      Math.abs(localX) < house.doorWidth / 2
-    ) {
-      return false; // boleh masuk lewat pintu
-    }
-
-    // === CEK JENDELA ===
-    // Jendela ada di sisi +X lokal (sisi panjang)
-    if (localX > house.halfW - 2.0) {
-      // Jendela 1
-      if (Math.abs(localZ - house.window1Z) < house.windowWidth / 2) {
-        return false;
-      }
-      // Jendela 2
-      if (Math.abs(localZ - house.window2Z) < house.windowWidth / 2) {
-        return false;
-      }
-    }
-
-    // === CEK JENDELA SISI SEBELAH ===
-    if (localX < -(house.halfW - 2.0)) {
-      if (Math.abs(localZ - house.window1Z) < house.windowWidth / 2) {
-        return false;
-      }
-      if (Math.abs(localZ - house.window2Z) < house.windowWidth / 2) {
-        return false;
-      }
-    }
-
-    // Selain pintu dan jendela → dinding → blokir
-    return true;
   }
 }
