@@ -10,22 +10,19 @@ export function createGraveyard(scene, obstacles, mapBoundary) {
       (gltf) => {
         const graveyard = gltf.scene;
 
-        // Posisi: sisi timur laut, jauh dari rumah
-        const angle = Math.PI * 0.25; // 45° (timur laut)
+        const angle = Math.PI * 0.25;
         const dist = 50;
         const graveX = Math.cos(angle) * dist;
         const graveZ = Math.sin(angle) * dist;
 
-        graveyard.position.set(graveX, 0, graveZ);
+        graveyard.position.set(graveX, 0.05, graveZ);
 
-        // Skala — sesuaikan kalau terlalu besar/kecil
         const scale = 2.0;
         graveyard.scale.set(scale, scale, scale);
 
-        // Rotasi supaya menghadap ke arah spawn
         graveyard.rotation.y = angle + Math.PI;
 
-        // Aktifkan shadow
+        // Jangan override material — biarkan tekstur asli muncul
         graveyard.traverse((child) => {
           if (child.isMesh) {
             child.castShadow = true;
@@ -35,7 +32,6 @@ export function createGraveyard(scene, obstacles, mapBoundary) {
 
         scene.add(graveyard);
 
-        // Cahaya bulan biru di atas kuburan
         const graveLight = new THREE.PointLight(0x6688cc, 1.5, 25, 2);
         graveLight.position.set(graveX, 10, graveZ);
         scene.add(graveLight);
