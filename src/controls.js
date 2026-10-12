@@ -109,7 +109,7 @@ export class PlayerControls {
 
   onTouchStart(e) {
     const target = e.target;
-    if (target.id === 'joystick-base' || target.id === 'joystick-knob' || target.id === 'jump-btn') return;
+    if (target.id === 'joystick-base' || target.id === 'joystick-knob' || target.id === 'jump-btn' || target.id === 'map-btn') return;
 
     for (const touch of e.changedTouches) {
       if (touch.clientX > window.innerWidth * 0.5) {
@@ -191,6 +191,7 @@ export class PlayerControls {
     }
 
     state.playerPos.copy(this.camera.position);
+    state.yaw = this.yaw;
 
     this.camera.rotation.order = 'YXZ';
     this.camera.rotation.y = this.yaw;
