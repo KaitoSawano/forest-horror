@@ -159,13 +159,52 @@ export class PlayerControls {
   isBlocked(x, z) {
     const playerRadius = 0.5;
     for (const obs of this.obstacles) {
-      const dx = x - obs.x;
-      const dz = z - obs.z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
-      if (dist < obs.radius + playerRadius) {
-        return true;
+      if (obs.type === 'box') {
+        if (this.isInsideBox(x, z, obs, playerRadius)) {
+          return true;
+        }
+      } else {
+        const dx = x - obs.x;
+        const dz = z - obs.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < obs.radius + playerRadius) {
+          return true;
+        }
       }
     }
     return false;
+  }
+
+  isInsideBox(x, z, box, playerRadius) {
+    // Transformasikan posisi pemain ke koordinat lokal rumah
+    const dx = x - box.centerX;
+    const dz = z - box.centerZ;
+
+    const cos = Math.cos(-box.rotation);
+    const sin = Math.sin(-box.rotation);
+
+    const localX = dx * cos - dz * sin;
+    const localZ = dx * sin + dz * cos;
+
+    // Cek apakah ada di dalam kotak (dengan sedikit margin)
+    const halfW = box.halfW - playerRadius;
+    const halfD = box.halfD - playerRadius;
+
+    // Kalau di luar kotak, tidak diblokir
+    if (Math.abs(localX) > halfW || Math.abs(localZ) > halfD) {
+      return false;
+    }
+
+    // Pemain ada di dalam area kotak.
+    // Tapi kita beri celah pintu di salah satu sisi.
+    // Asumsi: pintu ada di sisi +Z lokal (depan)
+    const doorHalf = box.doorWidth / 2;
+
+    // Kalau pemain di area pintu (dekat sisi +Z dan di tengah lebar)
+    if (Math.abs(localZ - halfD) < 1.5 && Math.abs(localX) < doorHalf) {
+      return false; // boleh lewat
+    }
+
+    return true;
   }
 }
