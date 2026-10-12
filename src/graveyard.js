@@ -17,7 +17,7 @@ export function createGraveyard(scene, obstacles, mapBoundary) {
 
         graveyard.position.set(graveX, 0.05, graveZ);
 
-        const scale = 2.0;
+        const scale = 0.4;
         graveyard.scale.set(scale, scale, scale);
 
         graveyard.rotation.y = angle + Math.PI;
@@ -30,6 +30,14 @@ export function createGraveyard(scene, obstacles, mapBoundary) {
         });
 
         scene.add(graveyard);
+
+        // Collision: 1 obstacle lingkaran di tengah kuburan
+        // Radius 3.5 unit (disesuaikan dengan ukuran kuburan setelah scale 0.4)
+        obstacles.push({
+          x: graveX,
+          z: graveZ,
+          radius: 3.5,
+        });
 
         const graveLight = new THREE.PointLight(0x6688cc, 1.5, 25, 2);
         graveLight.position.set(graveX, 10, graveZ);
