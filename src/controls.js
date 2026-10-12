@@ -11,6 +11,10 @@ export class PlayerControls {
     this.moveX = 0;
     this.moveY = 0;
 
+    // Raycaster untuk collision
+    this.raycaster = new THREE.Raycaster();
+    this.raycaster.far = 0.8;
+
     window.addEventListener('keydown', (e) => (this.keys[e.code] = true));
     window.addEventListener('keyup', (e) => (this.keys[e.code] = false));
 
@@ -138,13 +142,13 @@ export class PlayerControls {
     if (newZ > B) newZ = B;
     if (newZ < -B) newZ = -B;
 
-    if (!this.isBlocked(newX, newZ)) {
+    if (!this.isBlocked(newX, newZ, move)) {
       this.camera.position.x = newX;
       this.camera.position.z = newZ;
     } else {
-      if (!this.isBlocked(newX, this.camera.position.z)) {
+      if (!this.isBlocked(newX, this.camera.position.z, move)) {
         this.camera.position.x = newX;
-      } else if (!this.isBlocked(this.camera.position.x, newZ)) {
+      } else if (!this.isBlocked(this.camera.position.x, newZ, move)) {
         this.camera.position.z = newZ;
       }
     }
@@ -156,13 +160,16 @@ export class PlayerControls {
     this.camera.rotation.x = this.pitch;
   }
 
-  isBlocked(x, z) {
+  isBlocked(x, z, move) {
     const playerRadius = 0.5;
     for (const obs of this.obstacles) {
-      if (obs.type === 'box') {
-        if (this.isInsideBox(x, z, obs, playerRadius)) {
+      if (obs.type === 'mesh') {
+        if (this.isMeshBlocked(x, z, obs.meshes, move)) {
           return true;
         }
+      } else if (obs.type === 'box') {
+        // tidak dipakai lagi, tapi tetap didukung
+        continue;
       } else {
         const dx = x - obs.x;
         const dz = z - obs.z;
@@ -175,36 +182,31 @@ export class PlayerControls {
     return false;
   }
 
-  isInsideBox(x, z, box, playerRadius) {
-    // Transformasikan posisi pemain ke koordinat lokal rumah
-    const dx = x - box.centerX;
-    const dz = z - box.centerZ;
+  isMeshBlocked(x, z, meshes, move) {
+    // Tembak ray dari kamera ke arah gerakan
+    const origin = new THREE.Vector3(
+      this.camera.position.x,
+      1.7,
+      this.camera.position.z
+    );
 
-    const cos = Math.cos(-box.rotation);
-    const sin = Math.sin(-box.rotation);
+    const direction = new THREE.Vector3(move.x, 0, move.z);
+    if (direction.length() < 0.0001) return false;
+    direction.normalize();
 
-    const localX = dx * cos - dz * sin;
-    const localZ = dx * sin + dz * cos;
+    // Cek di ketinggian 0.5, 1.0, 1.5 (kaki, badan, kepala)
+    const heights = [0.5, 1.0, 1.5];
 
-    // Cek apakah ada di dalam kotak (dengan sedikit margin)
-    const halfW = box.halfW - playerRadius;
-    const halfD = box.halfD - playerRadius;
-
-    // Kalau di luar kotak, tidak diblokir
-    if (Math.abs(localX) > halfW || Math.abs(localZ) > halfD) {
-      return false;
+    for (const h of heights) {
+      origin.y = h;
+      this.raycaster.set(origin, direction);
+      this.raycaster.far = 0.8;
+      const hits = this.raycaster.intersectObjects(meshes, true);
+      if (hits.length > 0) {
+        return true;
+      }
     }
 
-    // Pemain ada di dalam area kotak.
-    // Tapi kita beri celah pintu di salah satu sisi.
-    // Asumsi: pintu ada di sisi +Z lokal (depan)
-    const doorHalf = box.doorWidth / 2;
-
-    // Kalau pemain di area pintu (dekat sisi +Z dan di tengah lebar)
-    if (Math.abs(localZ - halfD) < 1.5 && Math.abs(localX) < doorHalf) {
-      return false; // boleh lewat
-    }
-
-    return true;
+    return false;
   }
 }
