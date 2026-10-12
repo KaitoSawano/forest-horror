@@ -32,7 +32,6 @@ function copyDir(src, dest) {
 
 function processDir(srcDir, outDir) {
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-
   const entries = fs.readdirSync(srcDir, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -72,6 +71,9 @@ const loaderCode = `
     'ui.js', 'audio.js', 'minimap.js'
   ];
 
+  // Base URL absolut berdasarkan origin (file:// atau https://localhost)
+  const BASE = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+
   function hexToBytes(hex) {
     const bytes = new Uint8Array(hex.length / 2);
     for (let i = 0; i < hex.length; i += 2) {
@@ -81,7 +83,7 @@ const loaderCode = `
   }
 
   async function decryptFile(name) {
-    const res = await fetch('./' + name + '.enc');
+    const res = await fetch(BASE + name + '.enc');
     const encB64 = await res.text();
     const key = await crypto.subtle.importKey(
       'raw', hexToBytes(K),
@@ -101,40 +103,41 @@ const loaderCode = `
       try {
         modules[name] = await decryptFile(name);
       } catch (e) {
-        console.warn('Gagal load:', name);
+        console.warn('Gagal load:', name, e);
       }
     }
 
+    // Pass 1: buat blob URL dulu (tanpa rewrite import)
     const blobUrls = {};
     for (const name of files) {
       if (!modules[name]) continue;
-      let code = modules[name];
-      code = code.replace(/from ['"]three['"]/g, "from './lib/three.module.js'");
-      code = code.replace(/from ['"]three\\/addons\\/loaders\\/GLTFLoader\\.js['"]/g, "from './lib/GLTFLoader.js'");
-      code = code.replace(/from ['"]three\\/addons\\/utils\\/BufferGeometryUtils\\.js['"]/g, "from './lib/BufferGeometryUtils.js'");
-      for (const other of files) {
-        const re = new RegExp("from ['\\\"]\\\\./" + other.replace('.', '\\\\.') + "['\\\"]", 'g');
-        code = code.replace(re, "from '" + (blobUrls[other] || './' + other) + "'");
-      }
-      const blob = new Blob([code], { type: 'application/javascript' });
+      const blob = new Blob([modules[name]], { type: 'application/javascript' });
       blobUrls[name] = URL.createObjectURL(blob);
     }
 
+    // Pass 2: rewrite import di setiap module ke blob URL yang sudah ada
+    const finalUrls = {};
     for (const name of files) {
       if (!modules[name]) continue;
       let code = modules[name];
-      code = code.replace(/from ['"]three['"]/g, "from './lib/three.module.js'");
-      code = code.replace(/from ['"]three\\/addons\\/loaders\\/GLTFLoader\\.js['"]/g, "from './lib/GLTFLoader.js'");
-      code = code.replace(/from ['"]three\\/addons\\/utils\\/BufferGeometryUtils\\.js['"]/g, "from './lib/BufferGeometryUtils.js'");
+
+      // Rewrite three → path absolut
+      code = code.replace(/from ['"]three['"]/g, "from '" + BASE + "lib/three.module.js'");
+      code = code.replace(/from ['"]three\\/addons\\/loaders\\/GLTFLoader\\.js['"]/g, "from '" + BASE + "lib/GLTFLoader.js'");
+      code = code.replace(/from ['"]three\\/addons\\/utils\\/BufferGeometryUtils\\.js['"]/g, "from '" + BASE + "lib/BufferGeometryUtils.js'");
+
+      // Rewrite import relatif antar module → blob URL
       for (const other of files) {
-        const re = new RegExp("from ['\\\"]\\\\./" + other.replace('.', '\\\\.') + "['\\\"]", 'g');
+        const escaped = other.replace('.', '\\\\.');
+        const re = new RegExp("from ['\\\"]\\\\./" + escaped + "['\\\"]", 'g');
         code = code.replace(re, "from '" + blobUrls[other] + "'");
       }
+
       const blob = new Blob([code], { type: 'application/javascript' });
-      blobUrls[name] = URL.createObjectURL(blob);
+      finalUrls[name] = URL.createObjectURL(blob);
     }
 
-    await import(blobUrls['main.js']);
+    await import(finalUrls['main.js']);
   }
 
   loadAll().catch(err => {
