@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const JavaScriptObfuscator = require('javascript-obfuscator');
 
 const SRC_DIR = path.join(__dirname, '..', 'src');
 const OUT_DIR = path.join(__dirname, '..', 'src-encrypted');
@@ -61,53 +62,150 @@ processDir(SRC_DIR, OUT_DIR);
 const keyHex = ENCRYPTION_KEY.toString('hex');
 const ivHex = IV.toString('hex');
 
+function splitHex(hex, parts) {
+  const len = hex.length;
+  const chunkSize = Math.ceil(len / parts);
+  const result = [];
+  for (let i = 0; i < len; i += chunkSize) {
+    result.push(hex.substring(i, i + chunkSize));
+  }
+  return result;
+}
+
+const keyParts = splitHex(keyHex, 24);
+const ivParts = splitHex(ivHex, 20);
+
+const XOR_KEY = Math.floor(Math.random() * 200) + 50;
+const XOR_IV = Math.floor(Math.random() * 200) + 50;
+
+const TAMPER_HASH = crypto
+  .createHash('sha256')
+  .update(keyHex + ivHex + 'forest-horror-wasm-2026')
+  .digest('hex');
+
 const loaderCode = `
 (function() {
-  const K = "${keyHex}";
-  const I = "${ivHex}";
+  let _0xdCount = 0;
+  const _0xdCheck = function() {
+    const _0xs = performance.now();
+    debugger;
+    const _0xe = performance.now();
+    if (_0xe - _0xs > 150) {
+      _0xdCount++;
+      if (_0xdCount > 3) {
+        document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;">Debug detected.</div>';
+        throw new Error('DEBUG');
+      }
+    }
+  };
+  setInterval(_0xdCheck, 2000);
+
+  const _0xdomains = ['localhost', 'capacitor://localhost', 'file://', 'https://localhost'];
+  let _0xvalid = false;
+  for (const _0xd of _0xdomains) {
+    if (window.location.href.indexOf(_0xd) === 0) { _0xvalid = true; break; }
+  }
+  if (!_0xvalid) {
+    document.body.innerHTML = '';
+    throw new Error('DOMAIN');
+  }
+
+  const _0xa = [${keyParts.map(p => `"${p}"`).join(',')}];
+  const _0xb = [${ivParts.map(p => `"${p}"`).join(',')}];
+  const _0xc = ${XOR_KEY};
+  const _0xd = ${XOR_IV};
+  const _0xe = "${TAMPER_HASH}";
+
+  function _0xf(_0x10) {
+    const _0x11 = new Uint8Array(_0x10.length / 2);
+    for (let _0x12 = 0; _0x12 < _0x10.length; _0x12 += 2) {
+      _0x11[_0x12 / 2] = parseInt(_0x10.substr(_0x12, 2), 16);
+    }
+    return _0x11;
+  }
+
+  function _0x18(_0x19) {
+    let _0x1a = 0;
+    for (let _0x1b = 0; _0x1b < _0x19.length; _0x1b++) {
+      _0x1a = ((_0x1a << 5) - _0x1a) + _0x19.charCodeAt(_0x1b);
+      _0x1a |= 0;
+    }
+    return _0x1a;
+  }
+
+  const _0x1c = _0x18(document.currentScript.src + _0xe);
+  if (typeof _0x1c !== 'number') {
+    document.body.innerHTML = '';
+    throw new Error('TAMPER');
+  }
+
+  const _0x1d = _0xa.join('');
+  const _0x1e = _0xb.join('');
+
+  const BASE = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+
+  let _0xwasm = null;
+  async function _0xloadWasm() {
+    const res = await fetch(BASE + 'lib/decrypt.wasm');
+    const bytes = await res.arrayBuffer();
+    const mod = await WebAssembly.instantiate(bytes, {});
+    _0xwasm = mod.instance.exports;
+  }
+
+  function _0xxorWithWasm(bytes, key) {
+    if (!_0xwasm) return bytes;
+    const mem = new Uint8Array(_0xwasm.memory.buffer);
+    const ptr = 0;
+    for (let i = 0; i < bytes.length; i++) {
+      mem[ptr + i] = bytes[i];
+    }
+    _0xwasm.xorDecrypt(ptr, bytes.length, key);
+    const result = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) {
+      result[i] = mem[ptr + i];
+    }
+    return result;
+  }
+
+  async function _0xdecryptFile(name) {
+    const res = await fetch(BASE + name + '.enc');
+    const encB64 = await res.text();
+    const key = await crypto.subtle.importKey(
+      'raw', _0xf(_0x1d),
+      { name: 'AES-CBC' }, false, ['decrypt']
+    );
+    const encBytes = Uint8Array.from(atob(encB64), c => c.charCodeAt(0));
+    const iv = _0xf(_0x1e);
+    const ivProcessed = _0xxorWithWasm(iv, _0xd);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-CBC', iv: ivProcessed },
+      key, encBytes
+    );
+    return new TextDecoder().decode(decrypted);
+  }
+
   const files = [
     'main.js', 'forest.js', 'lighting.js', 'controls.js',
     'battery.js', 'books.js', 'house.js', 'graveyard.js',
     'ui.js', 'audio.js', 'minimap.js'
   ];
 
-  // Base URL absolut berdasarkan origin (file:// atau https://localhost)
-  const BASE = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-
-  function hexToBytes(hex) {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < hex.length; i += 2) {
-      bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  async function _0xloadAll() {
+    try {
+      await _0xloadWasm();
+    } catch (e) {
+      console.warn('WASM load failed, fallback to JS');
     }
-    return bytes;
-  }
 
-  async function decryptFile(name) {
-    const res = await fetch(BASE + name + '.enc');
-    const encB64 = await res.text();
-    const key = await crypto.subtle.importKey(
-      'raw', hexToBytes(K),
-      { name: 'AES-CBC' }, false, ['decrypt']
-    );
-    const encBytes = Uint8Array.from(atob(encB64), c => c.charCodeAt(0));
-    const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-CBC', iv: hexToBytes(I) },
-      key, encBytes
-    );
-    return new TextDecoder().decode(decrypted);
-  }
-
-  async function loadAll() {
     const modules = {};
     for (const name of files) {
       try {
-        modules[name] = await decryptFile(name);
+        modules[name] = await _0xdecryptFile(name);
       } catch (e) {
-        console.warn('Gagal load:', name, e);
+        console.warn('Load fail:', name);
       }
     }
 
-    // Pass 1: buat blob URL dulu (tanpa rewrite import)
     const blobUrls = {};
     for (const name of files) {
       if (!modules[name]) continue;
@@ -115,18 +213,15 @@ const loaderCode = `
       blobUrls[name] = URL.createObjectURL(blob);
     }
 
-    // Pass 2: rewrite import di setiap module ke blob URL yang sudah ada
     const finalUrls = {};
     for (const name of files) {
       if (!modules[name]) continue;
       let code = modules[name];
 
-      // Rewrite three → path absolut
       code = code.replace(/from ['"]three['"]/g, "from '" + BASE + "lib/three.module.js'");
       code = code.replace(/from ['"]three\\/addons\\/loaders\\/GLTFLoader\\.js['"]/g, "from '" + BASE + "lib/GLTFLoader.js'");
       code = code.replace(/from ['"]three\\/addons\\/utils\\/BufferGeometryUtils\\.js['"]/g, "from '" + BASE + "lib/BufferGeometryUtils.js'");
 
-      // Rewrite import relatif antar module → blob URL
       for (const other of files) {
         const escaped = other.replace('.', '\\\\.');
         const re = new RegExp("from ['\\\"]\\\\./" + escaped + "['\\\"]", 'g');
@@ -140,17 +235,52 @@ const loaderCode = `
     await import(finalUrls['main.js']);
   }
 
-  loadAll().catch(err => {
+  _0xloadAll().catch(err => {
     console.error('Loader error:', err);
     const el = document.getElementById('debug');
     if (el) {
-      el.textContent = 'LOADER ERROR: ' + err.message;
+      el.textContent = 'ERROR: ' + err.message;
       el.style.display = 'block';
     }
   });
 })();
 `;
 
-fs.writeFileSync(path.join(OUT_DIR, 'loader.js'), loaderCode);
+const obfuscatedLoader = JavaScriptObfuscator.obfuscate(loaderCode, {
+  compact: true,
+  controlFlowFlattening: true,
+  controlFlowFlatteningThreshold: 1,
+  deadCodeInjection: true,
+  deadCodeInjectionThreshold: 0.5,
+  debugProtection: false,
+  debugProtectionInterval: 0,
+  disableConsoleOutput: false,
+  identifierNamesGenerator: 'mangled-shuffled',
+  log: false,
+  numbersToExpressions: true,
+  renameGlobals: true,
+  selfDefending: true,
+  simplify: true,
+  splitStrings: true,
+  splitStringsChunkLength: 5,
+  stringArray: true,
+  stringArrayCallsTransform: true,
+  stringArrayCallsTransformThreshold: 0.75,
+  stringArrayEncoding: ['rc4'],
+  stringArrayIndexShift: true,
+  stringArrayRotate: true,
+  stringArrayShuffle: true,
+  stringArrayWrappersCount: 5,
+  stringArrayWrappersChainedCalls: true,
+  stringArrayWrappersParametersMaxCount: 5,
+  stringArrayWrappersType: 'function',
+  stringArrayThreshold: 1,
+  transformObjectKeys: true,
+  unicodeEscapeSequence: true,
+  target: 'browser'
+}).getObfuscatedCode();
+
+fs.writeFileSync(path.join(OUT_DIR, 'loader.js'), obfuscatedLoader);
 
 console.log('Selesai! File ter-encrypt ada di:', OUT_DIR);
+console.log('Loader size:', obfuscatedLoader.length, 'bytes');
