@@ -80,7 +80,7 @@ export function createForest(scene) {
     tree.add(leaves);
 
     const angle = Math.random() * Math.PI * 2;
-    const dist = 5 + Math.random() * 75;
+    const dist = 5 + Math.random() * 115;
     const x = Math.cos(angle) * dist;
     const z = Math.sin(angle) * dist;
     tree.position.set(x, 0, z);
