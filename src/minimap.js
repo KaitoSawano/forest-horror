@@ -14,6 +14,7 @@ export class Minimap {
     };
 
     this.books = [];
+    this.trees = [];   // <-- dari forest.js
 
     this.setupToggle();
   }
@@ -43,6 +44,10 @@ export class Minimap {
 
   setBooks(books) {
     this.books = books;
+  }
+
+  setTrees(trees) {
+    this.trees = trees;
   }
 
   drawParchment() {
@@ -87,13 +92,11 @@ export class Minimap {
     const ctx = this.ctx;
     ctx.fillStyle = 'rgba(60, 40, 20, 0.35)';
 
-    for (let i = 0; i < 400; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.random() * this.mapBoundary;
-      const x = center + Math.cos(angle) * dist * scale;
-      const y = center + Math.sin(angle) * dist * scale;
+    for (const tree of this.trees) {
+      const x = center + tree.x * scale;
+      const y = center + tree.z * scale;
+      const size = tree.size;
 
-      const size = 3 + Math.random() * 2;
       ctx.beginPath();
       ctx.moveTo(x, y - size);
       ctx.lineTo(x - size * 0.6, y + size * 0.5);
@@ -148,11 +151,6 @@ export class Minimap {
 
     ctx.save();
     ctx.translate(x, y);
-
-    // Konversi yaw Three.js ke rotasi canvas 2D
-    // yaw = 0  → hadap -Z dunia → di peta hadap atas
-    // yaw +=    → putar kiri di dunia, tapi di canvas putar...
-    // Kita pakai rotasi = -yaw + PI (biar panah selalu "naik" saat menghadap ke utara peta)
     ctx.rotate(-yaw);
 
     ctx.fillStyle = '#2ecc40';
