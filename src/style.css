@@ -107,7 +107,6 @@ html, body {
   display: none;
 }
 
-/* Tombol peta (kecil, di kiri atas bawah HUD) */
 #map-btn {
   position: fixed;
   top: 100px;
@@ -150,13 +149,14 @@ html, body {
 }
 
 #minimap {
-  width: 85vw;
-  height: 85vw;
-  max-width: 500px;
-  max-height: 500px;
-  border: 8px solid #5a3a1a;
-  border-radius: 16px;
+  width: 70vw;
+  height: 70vw;
+  max-width: 360px;
+  max-height: 360px;
+  border: 6px solid #5a3a1a;
+  border-radius: 12px;
   background: #b89968;
+  box-sizing: border-box;
   box-shadow:
     0 0 40px rgba(0, 0, 0, 0.9),
     inset 0 0 40px rgba(80, 50, 20, 0.6);
@@ -166,13 +166,13 @@ html, body {
   position: absolute;
   top: 20px;
   right: 20px;
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2px solid #cc4444;
   background: rgba(40, 10, 10, 0.9);
   color: #ff4444;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: bold;
   cursor: pointer;
   z-index: 410;
