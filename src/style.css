@@ -113,11 +113,10 @@ html, body {
   right: 16px;
   width: 55px;
   height: 55px;
-  border-radius: 8px;
   border: none;
-  background-color: rgba(40, 25, 15, 0.6);
+  background: transparent;
   background-image: url('./ui/map-icon.png');
-  background-size: 60%;
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   z-index: 250;
@@ -125,11 +124,12 @@ html, body {
   display: none;
   padding: 0;
   box-shadow: none;
+  opacity: 0.85;
 }
 
 #map-btn:active {
-  background-color: rgba(60, 40, 20, 0.9);
-  transform: scale(0.95);
+  transform: scale(0.9);
+  opacity: 1;
 }
 
 #minimap {
