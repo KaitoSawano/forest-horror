@@ -65,7 +65,7 @@ export function createForest(scene) {
 
   const obstacles = [];
 
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 100; i++) {
     const tree = new THREE.Group();
 
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
