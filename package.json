@@ -7,6 +7,7 @@
     "@capacitor/core": "^6.1.2"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.1.2"
+    "@capacitor/cli": "^6.1.2",
+    "javascript-obfuscator": "^4.1.1"
   }
 }
