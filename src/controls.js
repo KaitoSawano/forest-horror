@@ -18,9 +18,6 @@ export class PlayerControls {
     this.gravity = -20;
     this.jumpForce = 7;
 
-    this.raycaster = new THREE.Raycaster();
-    this.raycaster.far = 0.8;
-
     window.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
       if (e.code === 'Space') this.jump();
@@ -172,13 +169,13 @@ export class PlayerControls {
     if (newZ > B) newZ = B;
     if (newZ < -B) newZ = -B;
 
-    if (!this.isBlocked(newX, newZ, move)) {
+    if (!this.isBlocked(newX, newZ)) {
       this.camera.position.x = newX;
       this.camera.position.z = newZ;
     } else {
-      if (!this.isBlocked(newX, this.camera.position.z, move)) {
+      if (!this.isBlocked(newX, this.camera.position.z)) {
         this.camera.position.x = newX;
-      } else if (!this.isBlocked(this.camera.position.x, newZ, move)) {
+      } else if (!this.isBlocked(this.camera.position.x, newZ)) {
         this.camera.position.z = newZ;
       }
     }
@@ -202,14 +199,15 @@ export class PlayerControls {
     this.camera.rotation.x = this.pitch;
   }
 
-  isBlocked(x, z, move) {
+  isBlocked(x, z) {
     const playerRadius = 0.5;
+
     for (const obs of this.obstacles) {
-      if (obs.type === 'mesh') {
-        if (this.isMeshBlocked(x, z, obs.meshes, move)) {
+      if (obs.type === 'house') {
+        if (this.isHouseBlocked(x, z, obs, playerRadius)) {
           return true;
         }
-      } else if (obs.type === 'box') {
+      } else if (obs.type === 'mesh' || obs.type === 'box') {
         continue;
       } else {
         const dx = x - obs.x;
@@ -220,32 +218,57 @@ export class PlayerControls {
         }
       }
     }
+
     return false;
   }
 
-  isMeshBlocked(x, z, meshes, move) {
-    const origin = new THREE.Vector3(
-      this.camera.position.x,
-      1.7,
-      this.camera.position.z
-    );
+  isHouseBlocked(x, z, house, playerRadius) {
+    // Transformasi posisi pemain ke koordinat lokal rumah
+    const dx = x - house.centerX;
+    const dz = z - house.centerZ;
 
-    const direction = new THREE.Vector3(move.x, 0, move.z);
-    if (direction.length() < 0.0001) return false;
-    direction.normalize();
+    const cos = Math.cos(-house.rotation);
+    const sin = Math.sin(-house.rotation);
 
-    const heights = [0.5, 1.0, 1.5];
+    const localX = dx * cos - dz * sin;
+    const localZ = dx * sin + dz * cos;
 
-    for (const h of heights) {
-      origin.y = h;
-      this.raycaster.set(origin, direction);
-      this.raycaster.far = 0.8;
-      const hits = this.raycaster.intersectObjects(meshes, true);
-      if (hits.length > 0) {
-        return true;
+    // Cek apakah pemain di dalam area rumah (dengan margin)
+    const insideX = Math.abs(localX) < house.halfW + playerRadius;
+    const insideZ = Math.abs(localZ) < house.halfD + playerRadius;
+
+    // Kalau di luar area rumah, tidak diblokir
+    if (!insideX || !insideZ) return false;
+
+    // Pemain ada di dalam area rumah.
+    // Sekarang cek: apakah di area dinding atau di area pintu/jendela?
+
+    // === PINTU ===
+    // Asumsi pintu ada di sisi +Z lokal (sisi veranda)
+    // Kalau pemain di dekat sisi +Z lokal dan di tengah (dekat X=0), boleh lewat
+    if (
+      Math.abs(localZ - house.halfD) < 2.0 &&
+      Math.abs(localX) < house.doorWidth / 2
+    ) {
+      return false; // boleh lewat pintu
+    }
+
+    // === JENDELA ===
+    // Jendela ada di sisi +Z lokal juga, di kiri dan kanan pintu
+    // Kita bikin 2 celah jendela
+    const windowLeftX = -5.5;
+    const windowRightX = 5.5;
+
+    if (Math.abs(localZ - house.halfD) < 2.0) {
+      if (
+        Math.abs(localX - windowLeftX) < house.windowWidth / 2 ||
+        Math.abs(localX - windowRightX) < house.windowWidth / 2
+      ) {
+        return false; // boleh lewat jendela
       }
     }
 
-    return false;
+    // Kalau di area dinding (bukan pintu/jendela), blokir
+    return true;
   }
 }
