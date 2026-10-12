@@ -20,24 +20,34 @@ export function createHouse(scene, obstacles, mapBoundary) {
         const scale = 2.5;
         house.scale.set(scale, scale, scale);
 
-        house.rotation.y = -angle + Math.PI / 2;
-
-        const collidableMeshes = [];
+        const rotation = -angle + Math.PI / 2;
+        house.rotation.y = rotation;
 
         house.traverse((child) => {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
-            collidableMeshes.push(child);
           }
         });
 
         scene.add(house);
 
-        // Simpan daftar mesh rumah sebagai obstacle tipe 'mesh'
+        // Ukuran rumah setelah scale 2.5:
+        // Lebar (X): 6.79 * 2.5 = 16.98
+        // Panjang (Z): 7.56 * 2.5 = 18.9
+        // Veranda ada di salah satu sisi (yang ada pintu + tangga)
+        // Kita asumsikan: veranda di sisi +Z lokal
+
         obstacles.push({
-          type: 'mesh',
-          meshes: collidableMeshes,
+          type: 'house',
+          centerX: houseX,
+          centerZ: houseZ,
+          rotation: rotation,
+          halfW: 8.5,    // setengah lebar rumah
+          halfD: 9.5,    // setengah panjang rumah
+          doorZ: 9.5,    // posisi pintu di sisi +Z lokal (sisi veranda)
+          doorWidth: 3.5, // lebar celah pintu
+          windowWidth: 2.0, // lebar celah jendela
         });
 
         const houseLight = new THREE.PointLight(0xff8844, 1.2, 12, 2);
