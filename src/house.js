@@ -32,22 +32,29 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         scene.add(house);
 
-        // Ukuran rumah setelah scale 2.5:
-        // Lebar (X): 6.79 * 2.5 = 16.98
-        // Panjang (Z): 7.56 * 2.5 = 18.9
-        // Veranda ada di salah satu sisi (yang ada pintu + tangga)
-        // Kita asumsikan: veranda di sisi +Z lokal
-
+        // Simpan info rumah untuk collision
+        // Dari observasi 4 sisi:
+        // - Pintu ada di sisi veranda (sisi pendek rumah)
+        // - Jendela ada di sisi panjang
         obstacles.push({
           type: 'house',
           centerX: houseX,
           centerZ: houseZ,
           rotation: rotation,
-          halfW: 8.5,    // setengah lebar rumah
-          halfD: 9.5,    // setengah panjang rumah
-          doorZ: 9.5,    // posisi pintu di sisi +Z lokal (sisi veranda)
-          doorWidth: 3.5, // lebar celah pintu
-          windowWidth: 2.0, // lebar celah jendela
+          // Ukuran setelah scale 2.5:
+          // Dari BBOX: X=6.79, Z=7.56
+          // Setelah scale: X=17, Z=18.9
+          // Tapi karena pintu di sisi pendek, kita perlu orientasi ulang
+          halfW: 8.5,      // setengah dari 17
+          halfD: 9.5,      // setengah dari 18.9
+          // Pintu ada di sisi +Z lokal (veranda) — kita pakai +Z lokal
+          doorSideZ: 9.5,
+          doorWidth: 4.0,
+          // Jendela ada di sisi panjang (X lokal)
+          windowX: 8.5,
+          windowWidth: 2.5,
+          window1Z: -2.5,   // posisi jendela 1 (dari depan)
+          window2Z: 2.5,    // posisi jendela 2 (dari depan)
         });
 
         const houseLight = new THREE.PointLight(0xff8844, 1.2, 12, 2);
