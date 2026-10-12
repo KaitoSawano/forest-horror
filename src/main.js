@@ -47,7 +47,10 @@ try {
 
   const MAP_BOUNDARY = 120;
 
-  const obstacles = createForest(scene);
+  // Forest mengembalikan { obstacles, trees }
+  const forestData = createForest(scene);
+  const obstacles = forestData.obstacles;
+
   createLighting(scene);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
@@ -81,6 +84,9 @@ try {
       minimap.setGraveyard(grave.position.x, grave.position.z, maxSize / 2);
     }
   });
+
+  // Kirim data ke minimap
+  minimap.setTrees(forestData.trees);
 
   setTimeout(() => {
     minimap.setBooks(books.books);
