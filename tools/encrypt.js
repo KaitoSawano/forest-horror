@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const JavaScriptObfuscator = require('javascript-obfuscator');
 
 const SRC_DIR = path.join(__dirname, '..', 'src');
 const OUT_DIR = path.join(__dirname, '..', 'src-encrypted');
@@ -246,41 +245,8 @@ const loaderCode = `
 })();
 `;
 
-const obfuscatedLoader = JavaScriptObfuscator.obfuscate(loaderCode, {
-  compact: true,
-  controlFlowFlattening: true,
-  controlFlowFlatteningThreshold: 0.75,
-  deadCodeInjection: true,
-  deadCodeInjectionThreshold: 0.3,
-  debugProtection: false,
-  debugProtectionInterval: 0,
-  disableConsoleOutput: false,
-  identifierNamesGenerator: 'hexadecimal',
-  log: false,
-  numbersToExpressions: true,
-  renameGlobals: false,
-  selfDefending: false,
-  simplify: true,
-  splitStrings: true,
-  splitStringsChunkLength: 10,
-  stringArray: true,
-  stringArrayCallsTransform: true,
-  stringArrayCallsTransformThreshold: 0.5,
-  stringArrayEncoding: ['base64'],
-  stringArrayIndexShift: true,
-  stringArrayRotate: true,
-  stringArrayShuffle: true,
-  stringArrayWrappersCount: 2,
-  stringArrayWrappersChainedCalls: true,
-  stringArrayWrappersParametersMaxCount: 4,
-  stringArrayWrappersType: 'variable',
-  stringArrayThreshold: 0.75,
-  transformObjectKeys: false,
-  unicodeEscapeSequence: false,
-  target: 'browser'
-}).getObfuscatedCode();
-
-fs.writeFileSync(path.join(OUT_DIR, 'loader.js'), obfuscatedLoader);
+// TANPA OBFUSCATE — loader ditulis langsung
+fs.writeFileSync(path.join(OUT_DIR, 'loader.js'), loaderCode);
 
 console.log('Selesai! File ter-encrypt ada di:', OUT_DIR);
-console.log('Loader size:', obfuscatedLoader.length, 'bytes');
+console.log('Loader size:', loaderCode.length, 'bytes');
