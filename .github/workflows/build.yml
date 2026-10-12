@@ -35,6 +35,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Encrypt JavaScript
+        run: node tools/encrypt.js
+
+      - name: Update webDir
+        run: |
+          sed -i 's/"webDir": "[^"]*"/"webDir": "src-encrypted"/' capacitor.config.json
+
       - name: Add Android platform
         run: npx cap add android
 
