@@ -143,12 +143,17 @@ export class Minimap {
     }
   }
 
-  drawPlayerArrow(x, y, angle) {
+  drawPlayerArrow(x, y, yaw) {
     const ctx = this.ctx;
 
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(angle);
+
+    // Konversi yaw Three.js ke rotasi canvas 2D
+    // yaw = 0  → hadap -Z dunia → di peta hadap atas
+    // yaw +=    → putar kiri di dunia, tapi di canvas putar...
+    // Kita pakai rotasi = -yaw + PI (biar panah selalu "naik" saat menghadap ke utara peta)
+    ctx.rotate(-yaw);
 
     ctx.fillStyle = '#2ecc40';
     ctx.strokeStyle = '#0a6a10';
