@@ -109,10 +109,10 @@ html, body {
 
 #map-btn {
   position: fixed;
-  top: 16px;
-  right: 16px;
-  width: 55px;
-  height: 55px;
+  top: 100px;
+  left: 16px;
+  width: 42px;
+  height: 42px;
   border: none;
   background: transparent;
   background-image: url('./ui/map-icon.png');
@@ -134,8 +134,8 @@ html, body {
 
 #minimap {
   position: fixed;
-  top: 76px;
-  right: 16px;
+  top: 150px;
+  left: 16px;
   width: 180px;
   height: 180px;
   border: 6px solid #5a3a1a;
