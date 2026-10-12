@@ -7,6 +7,7 @@ import { HUD } from './ui.js';
 import { ForestAudio } from './audio.js';
 import { BookManager } from './books.js';
 import { createHouse } from './house.js';
+import { createGraveyard } from './graveyard.js';
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -49,6 +50,7 @@ try {
   createLighting(scene);
 
   createHouse(scene, obstacles, MAP_BOUNDARY);
+  createGraveyard(scene, obstacles, MAP_BOUNDARY);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
