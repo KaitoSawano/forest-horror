@@ -22,16 +22,23 @@ export function createHouse(scene, obstacles, mapBoundary) {
 
         house.rotation.y = -angle + Math.PI / 2;
 
+        const collidableMeshes = [];
+
         house.traverse((child) => {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+            collidableMeshes.push(child);
           }
         });
 
         scene.add(house);
 
-        // Tidak ada collision — pemain bisa masuk-keluar bebas
+        // Simpan daftar mesh rumah sebagai obstacle tipe 'mesh'
+        obstacles.push({
+          type: 'mesh',
+          meshes: collidableMeshes,
+        });
 
         const houseLight = new THREE.PointLight(0xff8844, 1.2, 12, 2);
         houseLight.position.set(houseX, 3 * scale, houseZ);
