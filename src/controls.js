@@ -11,11 +11,20 @@ export class PlayerControls {
     this.moveX = 0;
     this.moveY = 0;
 
-    // Raycaster untuk collision
+    // Lompat
+    this.velocityY = 0;
+    this.isJumping = false;
+    this.groundY = 1.7;
+    this.gravity = -20;
+    this.jumpForce = 7;
+
     this.raycaster = new THREE.Raycaster();
     this.raycaster.far = 0.8;
 
-    window.addEventListener('keydown', (e) => (this.keys[e.code] = true));
+    window.addEventListener('keydown', (e) => {
+      this.keys[e.code] = true;
+      if (e.code === 'Space') this.jump();
+    });
     window.addEventListener('keyup', (e) => (this.keys[e.code] = false));
 
     this.touchId = null;
@@ -26,6 +35,27 @@ export class PlayerControls {
     document.addEventListener('touchend', (e) => this.onTouchEnd(e));
 
     this.setupJoystick();
+    this.setupJumpButton();
+  }
+
+  setupJumpButton() {
+    const btn = document.getElementById('jump-btn');
+    if (!btn) return;
+
+    const trigger = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.jump();
+    };
+
+    btn.addEventListener('touchstart', trigger, { passive: false });
+    btn.addEventListener('click', trigger);
+  }
+
+  jump() {
+    if (this.isJumping) return;
+    this.velocityY = this.jumpForce;
+    this.isJumping = true;
   }
 
   setupJoystick() {
@@ -153,6 +183,18 @@ export class PlayerControls {
       }
     }
 
+    // === LOGIKA LOMPAT ===
+    if (this.isJumping) {
+      this.velocityY += this.gravity * dt;
+      this.camera.position.y += this.velocityY * dt;
+
+      if (this.camera.position.y <= this.groundY) {
+        this.camera.position.y = this.groundY;
+        this.velocityY = 0;
+        this.isJumping = false;
+      }
+    }
+
     state.playerPos.copy(this.camera.position);
 
     this.camera.rotation.order = 'YXZ';
@@ -168,7 +210,6 @@ export class PlayerControls {
           return true;
         }
       } else if (obs.type === 'box') {
-        // tidak dipakai lagi, tapi tetap didukung
         continue;
       } else {
         const dx = x - obs.x;
@@ -183,7 +224,6 @@ export class PlayerControls {
   }
 
   isMeshBlocked(x, z, meshes, move) {
-    // Tembak ray dari kamera ke arah gerakan
     const origin = new THREE.Vector3(
       this.camera.position.x,
       1.7,
@@ -194,7 +234,6 @@ export class PlayerControls {
     if (direction.length() < 0.0001) return false;
     direction.normalize();
 
-    // Cek di ketinggian 0.5, 1.0, 1.5 (kaki, badan, kepala)
     const heights = [0.5, 1.0, 1.5];
 
     for (const h of heights) {
