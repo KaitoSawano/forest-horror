@@ -8,35 +8,37 @@ export function createLighting(scene) {
   moon.position.set(30, 80, -30);
   scene.add(moon);
 
-  // === BINTANG ===
-  // Pakai shader khusus biar tidak tertutup fog
-  const starsGeo = new THREE.BufferGeometry();
-  const starsCount = 800;
-  const positions = new Float32Array(starsCount * 3);
-
-  for (let i = 0; i < starsCount; i++) {
-    // Distribusi di setengah bola atas
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(Math.random() * 0.7); // 0 sampai ~45 derajat dari atas
-    const r = 100;
-
-    positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-    positions[i * 3 + 1] = r * Math.cos(phi) + 20;
-    positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
-  }
-
-  starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-  const starsMat = new THREE.PointsMaterial({
+  // === BINTANG PAKAI SPHERE KECIL ===
+  const starsCount = 400;
+  const starGeo = new THREE.SphereGeometry(0.15, 4, 4);
+  const starMat = new THREE.MeshBasicMaterial({
     color: 0xffffff,
-    size: 0.3,
-    sizeAttenuation: false,   // <-- INI KUNCI: bintang ukuran tetap
-    transparent: true,
-    opacity: 0.8,
-    fog: false,               // <-- bintang tidak terkena fog
+    fog: false,
   });
 
-  const stars = new THREE.Points(starsGeo, starsMat);
+  const stars = new THREE.InstancedMesh(starGeo, starMat, starsCount);
+  stars.frustumCulled = false;
+
+  const dummy = new THREE.Object3D();
+
+  for (let i = 0; i < starsCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 0.7);
+    const r = 100;
+
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.cos(phi) + 20;
+    const z = r * Math.sin(phi) * Math.sin(theta);
+
+    dummy.position.set(x, y, z);
+    const scale = 0.5 + Math.random() * 1.5;
+    dummy.scale.set(scale, scale, scale);
+    dummy.updateMatrix();
+
+    stars.setMatrixAt(i, dummy.matrix);
+  }
+
+  stars.instanceMatrix.needsUpdate = true;
   scene.add(stars);
 
   console.log('Bintang:', starsCount);
