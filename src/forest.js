@@ -46,7 +46,20 @@ function createGroundTexture() {
   return texture;
 }
 
-export function createForest(scene) {
+// === CEK APAKAH POSISI DI JALAN ===
+function isOnPath(x, z, pathInfo) {
+  if (!pathInfo) return false;
+  // Jalan vertikal: lebar 4 di sumbu X, panjang 240 di sumbu Z
+  const halfWidth = pathInfo.width / 2 + 1.5; // margin 1.5 unit
+  const halfLength = pathInfo.length / 2;
+
+  const localX = x - pathInfo.centerX;
+  const localZ = z - pathInfo.centerZ;
+
+  return Math.abs(localX) < halfWidth && Math.abs(localZ) < halfLength;
+}
+
+export function createForest(scene, pathInfo) {
   const groundTexture = createGroundTexture();
 
   const groundGeo = new THREE.PlaneGeometry(500, 500);
@@ -80,11 +93,20 @@ export function createForest(scene) {
 
   const dummy = new THREE.Object3D();
 
-  for (let i = 0; i < treeCount; i++) {
+  let placed = 0;
+  let attempts = 0;
+
+  while (placed < treeCount && attempts < 500) {
+    attempts++;
+
     const angle = Math.random() * Math.PI * 2;
-    const dist = 5 + Math.random() * 115;
+    const dist = 8 + Math.random() * 110;
     const x = Math.cos(angle) * dist;
     const z = Math.sin(angle) * dist;
+
+    // Skip kalau di jalan
+    if (isOnPath(x, z, pathInfo)) continue;
+
     const s = 0.7 + Math.random() * 0.8;
     const rotY = Math.random() * Math.PI * 2;
 
@@ -92,16 +114,17 @@ export function createForest(scene) {
     dummy.rotation.set(0, rotY, 0);
     dummy.scale.set(s, s, s);
     dummy.updateMatrix();
-    trunkInstanced.setMatrixAt(i, dummy.matrix);
+    trunkInstanced.setMatrixAt(placed, dummy.matrix);
 
     dummy.position.set(x, 4.5 * s, z);
     dummy.rotation.set(0, rotY, 0);
     dummy.scale.set(s, s, s);
     dummy.updateMatrix();
-    leafInstanced.setMatrixAt(i, dummy.matrix);
+    leafInstanced.setMatrixAt(placed, dummy.matrix);
 
     obstacles.push({ x, z, radius: 0.5 * s });
     treeData.push({ x, z, size: 2 + s * 2 });
+    placed++;
   }
 
   trunkInstanced.instanceMatrix.needsUpdate = true;
@@ -110,20 +133,17 @@ export function createForest(scene) {
   scene.add(trunkInstanced);
   scene.add(leafInstanced);
 
-  console.log('Pohon primitive: 80 (2 draw calls)');
+  console.log('Pohon primitive: ' + placed + ' (2 draw calls)');
 
-  // === POHON MATI (GLB) PAKAI INSTANCED MESH JUGA ===
+  // === POHON MATI (GLB) ===
   const loader = new GLTFLoader();
   loader.load(
     './assets/tree-small.glb',
     (gltf) => {
       const template = gltf.scene;
       const baseScale = 0.35;
-
-      // Hitung total pohon mati
       const deadTreeCount = 40;
 
-      // Kumpulkan semua mesh dari template
       const meshes = [];
       template.traverse((child) => {
         if (child.isMesh) {
@@ -131,26 +151,31 @@ export function createForest(scene) {
         }
       });
 
-      console.log('Mesh dalam tree-small.glb:', meshes.length);
-
-      // Buat InstancedMesh untuk setiap mesh
       const instancedMeshes = meshes.map((mesh) => {
         const im = new THREE.InstancedMesh(
           mesh.geometry,
           mesh.material,
           deadTreeCount
         );
-        im.castShadow = false;  // matikan shadow biar ringan
+        im.castShadow = false;
         im.receiveShadow = true;
         return im;
       });
 
-      // Set matrix untuk setiap instance
-      for (let i = 0; i < deadTreeCount; i++) {
+      let deadPlaced = 0;
+      let deadAttempts = 0;
+
+      while (deadPlaced < deadTreeCount && deadAttempts < 500) {
+        deadAttempts++;
+
         const angle = Math.random() * Math.PI * 2;
         const dist = 10 + Math.random() * 110;
         const x = Math.cos(angle) * dist;
         const z = Math.sin(angle) * dist;
+
+        // Skip kalau di jalan
+        if (isOnPath(x, z, pathInfo)) continue;
+
         const s = baseScale * (0.7 + Math.random() * 0.6);
         const rotY = Math.random() * Math.PI * 2;
 
@@ -160,11 +185,12 @@ export function createForest(scene) {
         dummy.updateMatrix();
 
         for (const im of instancedMeshes) {
-          im.setMatrixAt(i, dummy.matrix);
+          im.setMatrixAt(deadPlaced, dummy.matrix);
         }
 
         obstacles.push({ x, z, radius: 1.5 * s });
         treeData.push({ x, z, size: 4 });
+        deadPlaced++;
       }
 
       for (const im of instancedMeshes) {
@@ -172,7 +198,7 @@ export function createForest(scene) {
         scene.add(im);
       }
 
-      console.log('Pohon mati: ' + deadTreeCount + ' (' + instancedMeshes.length + ' draw calls)');
+      console.log('Pohon mati: ' + deadPlaced + ' (' + instancedMeshes.length + ' draw calls)');
     },
     undefined,
     (err) => {
