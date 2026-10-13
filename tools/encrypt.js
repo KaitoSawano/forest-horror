@@ -79,19 +79,27 @@ const XOR_IV = Math.floor(Math.random() * 200) + 50;
 
 const loaderCode = `
 (function() {
+  var LOGS = [];
+
+  function log(msg) {
+    LOGS.push(msg);
+    var el = document.getElementById('debug');
+    if (el) {
+      el.textContent = LOGS.join('\\n');
+      el.style.display = 'block';
+      el.style.whiteSpace = 'pre-wrap';
+      el.style.fontSize = '10px';
+      el.style.maxHeight = '90vh';
+      el.style.overflow = 'auto';
+      el.style.zIndex = '99999';
+    }
+    console.log('[LOADER]', msg);
+  }
+
   var _0xa = [${keyParts.map(p => `"${p}"`).join(',')}];
   var _0xb = [${ivParts.map(p => `"${p}"`).join(',')}];
   var _0xc = ${XOR_KEY};
   var _0xd = ${XOR_IV};
-
-  function log(msg) {
-    var el = document.getElementById('debug');
-    if (el) {
-      el.textContent = 'DEBUG: ' + msg;
-      el.style.display = 'block';
-    }
-    console.log('[LOADER]', msg);
-  }
 
   function _0xf(_0x10) {
     var _0x11 = new Uint8Array(_0x10.length / 2);
@@ -117,8 +125,7 @@ const loaderCode = `
 
   var BASE = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
 
-  log('BASE = ' + BASE);
-  log('Key OK, IV OK');
+  log('BASE=' + BASE);
 
   var files = [
     'main.js', 'forest.js', 'lighting.js', 'controls.js',
@@ -127,12 +134,12 @@ const loaderCode = `
   ];
 
   async function decryptFile(name) {
-    log('Fetch: ' + name + '.enc');
+    log('FETCH:' + name);
     var res = await fetch(BASE + name + '.enc');
-    log('Status ' + name + ': ' + res.status);
-    if (!res.ok) throw new Error('Fetch fail: ' + name + ' (' + res.status + ')');
+    log('STATUS:' + name + '=' + res.status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     var encB64 = await res.text();
-    log('Size ' + name + ': ' + encB64.length);
+    log('SIZE:' + name + '=' + encB64.length);
 
     var key = await crypto.subtle.importKey(
       'raw', _0x1f,
@@ -155,15 +162,15 @@ const loaderCode = `
     for (var i = 0; i < files.length; i++) {
       try {
         modules[files[i]] = await decryptFile(files[i]);
-        log('OK: ' + files[i]);
+        log('OK:' + files[i]);
       } catch (e) {
-        log('FAIL: ' + files[i] + ' - ' + e.message);
+        log('FAIL:' + files[i] + '=' + e.message);
       }
     }
 
     var loadedCount = 0;
     for (var x in modules) loadedCount++;
-    log('Total loaded: ' + loadedCount + '/' + files.length);
+    log('LOADED:' + loadedCount + '/' + files.length);
 
     var blobUrls = {};
     for (var j = 0; j < files.length; j++) {
@@ -197,16 +204,17 @@ const loaderCode = `
     }
 
     if (!finalUrls['main.js']) {
+      log('NO_MAIN_BLOB');
       throw new Error('main.js tidak bisa di-load');
     }
 
-    log('Import main.js...');
+    log('IMPORT main.js...');
     await import(finalUrls['main.js']);
+    log('SUKSES');
   }
 
   loadAll().catch(function(err) {
-    console.error('Loader error:', err);
-    log('FATAL: ' + err.message);
+    log('FATAL:' + err.message);
   });
 })();
 `;
