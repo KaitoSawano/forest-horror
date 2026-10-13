@@ -132,7 +132,7 @@ const loaderCode = `
   var files = [
     'main.js', 'forest.js', 'lighting.js', 'controls.js',
     'battery.js', 'books.js', 'house.js', 'graveyard.js',
-    'ui.js', 'audio.js', 'minimap.js'
+    'ui.js', 'audio.js', 'minimap.js', 'path.js'
   ];
 
   async function decryptFile(name) {
@@ -218,7 +218,6 @@ const loaderCode = `
     try {
       await import(finalUrls['main.js']);
       log('SUKSES');
-      // SEMBUNYIKAN LOG setelah 2 detik kalau sukses
       setTimeout(hideLogs, 2000);
     } catch (e) {
       log('IMPORT_FAIL:' + (e.message || e.name || 'unknown'));
