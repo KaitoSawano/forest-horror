@@ -102,10 +102,7 @@ try {
 
   const MAP_BOUNDARY = 120;
 
-  // Buat jalan DULU
   const pathInfo = createPath(scene);
-
-  // Forest dengan info jalan
   const forestData = createForest(scene, pathInfo);
   const obstacles = forestData.obstacles;
 
@@ -162,7 +159,6 @@ try {
   const joystickEl = document.getElementById('joystick-base');
   const jumpBtnEl = document.getElementById('jump-btn');
   const crosshairEl = document.getElementById('crosshair');
-  const hudEl = document.getElementById('hud');
   const helpOverlay = document.getElementById('help-overlay');
 
   document.getElementById('btn-play').addEventListener('click', () => {
@@ -171,7 +167,6 @@ try {
     joystickEl.style.display = 'block';
     jumpBtnEl.style.display = 'block';
     crosshairEl.style.display = 'block';
-    hudEl.classList.add('visible');
     minimap.show();
 
     audio.stopMenuMusic();
@@ -225,7 +220,6 @@ try {
       books.update(dt, state.playerPos);
       state.books.collected = books.getCollected();
       minimap.update(state);
-      hud.update(state);
       state.time = (state.time + dt * 60) % (24 * 60);
     }
 
