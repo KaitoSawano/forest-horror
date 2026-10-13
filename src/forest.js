@@ -62,14 +62,13 @@ export function createForest(scene) {
   const obstacles = [];
   const treeData = [];
 
-  // Pohon primitive sebagai fallback
+  // Pohon primitive (hijau) — banyak
   const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 4, 6);
   const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a });
   const leafGeo = new THREE.ConeGeometry(1.5, 3, 7);
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x1a2a1a });
 
-  // Generate 100 pohon primitive dulu (biar selalu ada)
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 80; i++) {
     const tree = new THREE.Group();
 
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
@@ -97,29 +96,15 @@ export function createForest(scene) {
     treeData.push({ x, z, size: 2 + s * 2 });
   }
 
-  // Coba load tree.glb — kalau berhasil, ganti pohon primitive
+  // Pohon mati (GLB) — aksen horor
   const loader = new GLTFLoader();
   loader.load(
-    './assets/tree.glb',
+    './assets/tree-small.glb',
     (gltf) => {
-      // Hapus pohon primitive
-      for (let i = scene.children.length - 1; i >= 0; i--) {
-        const child = scene.children[i];
-        if (child.isGroup && child.children.length === 2) {
-          if (child.children[0].geometry === trunkGeo) {
-            scene.remove(child);
-          }
-        }
-      }
-
-      // Reset obstacles dan treeData
-      obstacles.length = 0;
-      treeData.length = 0;
-
       const template = gltf.scene;
-      const baseScale = 2.0;
+      const baseScale = 2.5;
 
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 25; i++) {
         const tree = template.clone(true);
 
         tree.traverse((child) => {
@@ -130,7 +115,7 @@ export function createForest(scene) {
         });
 
         const angle = Math.random() * Math.PI * 2;
-        const dist = 8 + Math.random() * 112;
+        const dist = 10 + Math.random() * 110;
         const x = Math.cos(angle) * dist;
         const z = Math.sin(angle) * dist;
 
@@ -143,14 +128,14 @@ export function createForest(scene) {
         scene.add(tree);
 
         obstacles.push({ x, z, radius: 1.0 * s });
-        treeData.push({ x, z, size: 3 });
+        treeData.push({ x, z, size: 4 });
       }
 
-      console.log('Tree.glb loaded, 60 pohon');
+      console.log('Pohon mati loaded: 25');
     },
     undefined,
     (err) => {
-      console.warn('Gagal load tree.glb, pakai pohon primitive');
+      console.warn('Gagal load tree-small.glb');
     }
   );
 
