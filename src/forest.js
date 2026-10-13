@@ -62,78 +62,117 @@ export function createForest(scene) {
   const obstacles = [];
   const treeData = [];
 
-  // === POHON PRIMITIVE (hijau) ===
+  // === POHON PRIMITIVE PAKAI INSTANCED MESH ===
   const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 4, 6);
   const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a });
+
   const leafGeo = new THREE.ConeGeometry(1.5, 3, 7);
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x1a2a1a });
 
-  for (let i = 0; i < 80; i++) {
-    const tree = new THREE.Group();
+  const treeCount = 80;
 
-    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-    trunk.position.y = 2;
-    trunk.castShadow = true;
-    trunk.receiveShadow = true;
-    tree.add(trunk);
+  const trunkInstanced = new THREE.InstancedMesh(trunkGeo, trunkMat, treeCount);
+  const leafInstanced = new THREE.InstancedMesh(leafGeo, leafMat, treeCount);
 
-    const leaves = new THREE.Mesh(leafGeo, leafMat);
-    leaves.position.y = 4.5;
-    leaves.castShadow = true;
-    tree.add(leaves);
+  trunkInstanced.castShadow = true;
+  trunkInstanced.receiveShadow = true;
+  leafInstanced.castShadow = true;
 
+  const dummy = new THREE.Object3D();
+
+  for (let i = 0; i < treeCount; i++) {
     const angle = Math.random() * Math.PI * 2;
     const dist = 5 + Math.random() * 115;
     const x = Math.cos(angle) * dist;
     const z = Math.sin(angle) * dist;
-    tree.position.set(x, 0, z);
-    tree.rotation.y = Math.random() * Math.PI * 2;
     const s = 0.7 + Math.random() * 0.8;
-    tree.scale.set(s, s, s);
+    const rotY = Math.random() * Math.PI * 2;
 
-    scene.add(tree);
+    dummy.position.set(x, 2 * s, z);
+    dummy.rotation.set(0, rotY, 0);
+    dummy.scale.set(s, s, s);
+    dummy.updateMatrix();
+    trunkInstanced.setMatrixAt(i, dummy.matrix);
+
+    dummy.position.set(x, 4.5 * s, z);
+    dummy.rotation.set(0, rotY, 0);
+    dummy.scale.set(s, s, s);
+    dummy.updateMatrix();
+    leafInstanced.setMatrixAt(i, dummy.matrix);
+
     obstacles.push({ x, z, radius: 0.5 * s });
     treeData.push({ x, z, size: 2 + s * 2 });
   }
 
-  // === POHON MATI (GLB) — hanya 5, ukuran kecil ===
+  trunkInstanced.instanceMatrix.needsUpdate = true;
+  leafInstanced.instanceMatrix.needsUpdate = true;
+
+  scene.add(trunkInstanced);
+  scene.add(leafInstanced);
+
+  console.log('Pohon primitive: 80 (2 draw calls)');
+
+  // === POHON MATI (GLB) PAKAI INSTANCED MESH JUGA ===
   const loader = new GLTFLoader();
   loader.load(
     './assets/tree-small.glb',
     (gltf) => {
       const template = gltf.scene;
-      // Skala JAUH LEBIH KECIL — 0.3 (sebelumnya 2.5)
-      const baseScale = 0.3;
+      const baseScale = 0.35;
 
-      // Cuma 5 pohon mati (sebelumnya 25)
-      for (let i = 0; i < 5; i++) {
-        const tree = template.clone(true);
+      // Hitung total pohon mati
+      const deadTreeCount = 40;
 
-        tree.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
+      // Kumpulkan semua mesh dari template
+      const meshes = [];
+      template.traverse((child) => {
+        if (child.isMesh) {
+          meshes.push(child);
+        }
+      });
 
+      console.log('Mesh dalam tree-small.glb:', meshes.length);
+
+      // Buat InstancedMesh untuk setiap mesh
+      const instancedMeshes = meshes.map((mesh) => {
+        const im = new THREE.InstancedMesh(
+          mesh.geometry,
+          mesh.material,
+          deadTreeCount
+        );
+        im.castShadow = false;  // matikan shadow biar ringan
+        im.receiveShadow = true;
+        return im;
+      });
+
+      // Set matrix untuk setiap instance
+      for (let i = 0; i < deadTreeCount; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const dist = 15 + Math.random() * 100;
+        const dist = 10 + Math.random() * 110;
         const x = Math.cos(angle) * dist;
         const z = Math.sin(angle) * dist;
-
-        tree.position.set(x, 0, z);
-        tree.rotation.y = Math.random() * Math.PI * 2;
-
         const s = baseScale * (0.7 + Math.random() * 0.6);
-        tree.scale.set(s, s, s);
+        const rotY = Math.random() * Math.PI * 2;
 
-        scene.add(tree);
+        dummy.position.set(x, 0, z);
+        dummy.rotation.set(0, rotY, 0);
+        dummy.scale.set(s, s, s);
+        dummy.updateMatrix();
 
-        obstacles.push({ x, z, radius: 2.0 * s });
-        treeData.push({ x, z, size: 5 });
+        for (const im of instancedMeshes) {
+          im.setMatrixAt(i, dummy.matrix);
+        }
+
+        obstacles.push({ x, z, radius: 1.5 * s });
+        treeData.push({ x, z, size: 4 });
       }
 
-      console.log('Pohon mati loaded: 5');
+      for (const im of instancedMeshes) {
+        im.instanceMatrix.needsUpdate = true;
+        scene.add(im);
+      }
+
+      console.log('Pohon mati: ' + deadTreeCount + ' (' + instancedMeshes.length + ' draw calls)');
     },
     undefined,
     (err) => {
