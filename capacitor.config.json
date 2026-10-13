@@ -1,6 +1,6 @@
 {
   "appId": "com.atticforge.umbra-grove",
-  "appName": "OpenWorld",
+  "appName": "Umbra Grove",
   "webDir": "src",
   "server": {
     "androidScheme": "https"
