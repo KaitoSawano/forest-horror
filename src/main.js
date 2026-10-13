@@ -20,15 +20,83 @@ function showError(msg) {
 window.addEventListener('error', (e) => showError('ERROR: ' + e.message));
 window.addEventListener('unhandledrejection', (e) => showError('REJECT: ' + (e.reason?.message || e.reason)));
 
+// === FUNGSI BIKIN LANGIT BINTANG ===
+function createStarSky() {
+  const width = 2048;
+  const height = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  // Gradient langit: hitam kebiruan di atas, sedikit coklat di horizon
+  const grad = ctx.createLinearGradient(0, 0, 0, height);
+  grad.addColorStop(0, '#050508');
+  grad.addColorStop(0.6, '#0a0a12');
+  grad.addColorStop(1, '#1a1210');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Gambar bintang
+  for (let i = 0; i < 1500; i++) {
+    const x = Math.random() * width;
+    const y = Math.random() * height * 0.75;
+    const r = Math.random() * 1.5 + 0.3;
+    const alpha = Math.random() * 0.7 + 0.3;
+
+    // Warna bintang: putih, biru muda, atau kekuningan
+    const colorRoll = Math.random();
+    let color;
+    if (colorRoll < 0.7) {
+      color = `rgba(255, 255, 255, ${alpha})`;
+    } else if (colorRoll < 0.9) {
+      color = `rgba(200, 220, 255, ${alpha})`;
+    } else {
+      color = `rgba(255, 240, 200, ${alpha})`;
+    }
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Beberapa bintang lebih besar
+  for (let i = 0; i < 30; i++) {
+    const x = Math.random() * width;
+    const y = Math.random() * height * 0.7;
+    const r = Math.random() * 2 + 1.5;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glow
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+    glow.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+    glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+  return texture;
+}
+
 try {
   const canvas = document.getElementById('game');
 
   const scene = new THREE.Scene();
 
-  // === LANGIT HITAM KEBIRUAN (MALAM) ===
-  scene.background = new THREE.Color(0x0a0a12);
+  // === LANGIT BINTANG ===
+  scene.background = createStarSky();
 
-  // === KABUT LEBIH TIPIS ===
+  // Kabut tipis
   scene.fog = new THREE.FogExp2(0x0a0a12, 0.08);
 
   const camera = new THREE.PerspectiveCamera(
