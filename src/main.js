@@ -24,8 +24,12 @@ try {
   const canvas = document.getElementById('game');
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000000);
-  scene.fog = new THREE.FogExp2(0x000000, 0.06);
+
+  // === LANGIT COKLAT GELAP ===
+  scene.background = new THREE.Color(0x1a0f0a);
+
+  // === KABUT COKLAT TEBAL ===
+  scene.fog = new THREE.FogExp2(0x1a0f0a, 0.15);
 
   const camera = new THREE.PerspectiveCamera(
     75,
@@ -38,16 +42,15 @@ try {
 
   const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
-    antialias: true,
+    antialias: false,
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const MAP_BOUNDARY = 120;
 
-  // Forest mengembalikan { obstacles, trees }
   const forestData = createForest(scene);
   const obstacles = forestData.obstacles;
 
@@ -85,7 +88,6 @@ try {
     }
   });
 
-  // Kirim data ke minimap
   minimap.setTrees(forestData.trees);
 
   setTimeout(() => {
