@@ -9,6 +9,7 @@ import { BookManager } from './books.js';
 import { createHouse } from './house.js';
 import { createGraveyard } from './graveyard.js';
 import { Minimap } from './minimap.js';
+import { createPath } from './path.js';
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -20,7 +21,6 @@ function showError(msg) {
 window.addEventListener('error', (e) => showError('ERROR: ' + e.message));
 window.addEventListener('unhandledrejection', (e) => showError('REJECT: ' + (e.reason?.message || e.reason)));
 
-// === FUNGSI BIKIN LANGIT BINTANG KECIL-KECIL ===
 function createStarSky() {
   const width = 2048;
   const height = 1024;
@@ -29,7 +29,6 @@ function createStarSky() {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  // Gradient langit: hitam kebiruan di atas, coklat di horizon
   const grad = ctx.createLinearGradient(0, 0, 0, height);
   grad.addColorStop(0, '#050508');
   grad.addColorStop(0.6, '#0a0a12');
@@ -37,15 +36,12 @@ function createStarSky() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, width, height);
 
-  // === BINTANG KECIL-KECIL (tanpa glow) ===
   for (let i = 0; i < 2000; i++) {
     const x = Math.random() * width;
     const y = Math.random() * height * 0.8;
-    // Bintang SANGAT kecil
     const r = Math.random() * 0.8 + 0.2;
     const alpha = Math.random() * 0.5 + 0.4;
 
-    // Warna: putih, biru muda, atau kekuningan
     const colorRoll = Math.random();
     let color;
     if (colorRoll < 0.75) {
@@ -62,7 +58,6 @@ function createStarSky() {
     ctx.fill();
   }
 
-  // === BINTANG SEDANG (beberapa saja, tanpa glow besar) ===
   for (let i = 0; i < 40; i++) {
     const x = Math.random() * width;
     const y = Math.random() * height * 0.7;
@@ -84,11 +79,7 @@ try {
   const canvas = document.getElementById('game');
 
   const scene = new THREE.Scene();
-
-  // === LANGIT BINTANG ===
   scene.background = createStarSky();
-
-  // Kabut tipis
   scene.fog = new THREE.FogExp2(0x0a0a12, 0.08);
 
   const camera = new THREE.PerspectiveCamera(
@@ -115,6 +106,7 @@ try {
   const obstacles = forestData.obstacles;
 
   createLighting(scene);
+  createPath(scene);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
