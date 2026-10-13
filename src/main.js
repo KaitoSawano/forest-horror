@@ -102,11 +102,14 @@ try {
 
   const MAP_BOUNDARY = 120;
 
-  const forestData = createForest(scene);
+  // Buat jalan DULU
+  const pathInfo = createPath(scene);
+
+  // Forest dengan info jalan
+  const forestData = createForest(scene, pathInfo);
   const obstacles = forestData.obstacles;
 
   createLighting(scene);
-  createPath(scene);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
