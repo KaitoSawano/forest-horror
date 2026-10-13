@@ -8,11 +8,9 @@ export function createPath(scene) {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
 
-  // Warna dasar tanah terang (coklat muda)
   ctx.fillStyle = '#8a7550';
   ctx.fillRect(0, 0, size, size);
 
-  // Bintik-bintik tanah
   for (let i = 0; i < 6000; i++) {
     const x = Math.floor(Math.random() * size);
     const y = Math.floor(Math.random() * size);
@@ -38,7 +36,7 @@ export function createPath(scene) {
   const pathTexture = new THREE.CanvasTexture(canvas);
   pathTexture.wrapS = THREE.RepeatWrapping;
   pathTexture.wrapT = THREE.RepeatWrapping;
-  pathTexture.repeat.set(2, 30);
+  pathTexture.repeat.set(2, 40);
   pathTexture.magFilter = THREE.NearestFilter;
   pathTexture.minFilter = THREE.NearestMipmapNearestFilter;
   pathTexture.colorSpace = THREE.SRGBColorSpace;
@@ -49,59 +47,46 @@ export function createPath(scene) {
     color: 0xaa9977,
   });
 
-  // === JALAN UTAMA ===
-  // Membelah hutan dari spawn (0,0) ke utara (-Z)
-  // Lebar 4 unit, panjang 200 unit
-  const pathGeo = new THREE.PlaneGeometry(4, 200);
+  // === SATU JALAN LURUS PANJANG (tidak terputus) ===
+  // Lebar 4, panjang 240 (dari -120 sampai +120)
+  const pathGeo = new THREE.PlaneGeometry(4, 240);
   const path = new THREE.Mesh(pathGeo, pathMat);
   path.rotation.x = -Math.PI / 2;
-  path.position.set(0, 0.03, -50); // sedikit di atas tanah
+  path.position.set(0, 0.03, 0);
   path.receiveShadow = true;
   scene.add(path);
 
-  // === JALAN CABANG 1: ke rumah (barat daya) ===
-  const path2Geo = new THREE.PlaneGeometry(3.5, 60);
-  const path2 = new THREE.Mesh(path2Geo, pathMat);
-  path2.rotation.x = -Math.PI / 2;
-  path2.rotation.z = Math.PI / 4; // 45 derajat
-  path2.position.set(-14, 0.03, 14);
-  path2.receiveShadow = true;
-  scene.add(path2);
-
-  // === JALAN CABANG 2: ke kuburan (timur laut) ===
-  const path3Geo = new THREE.PlaneGeometry(3.5, 50);
-  const path3 = new THREE.Mesh(path3Geo, pathMat);
-  path3.rotation.x = -Math.PI / 2;
-  path3.rotation.z = Math.PI / 4;
-  path3.position.set(11, 0.03, 11);
-  path3.receiveShadow = true;
-  scene.add(path3);
-
-  // === TEPI JALAN (sedikit lebih gelap) ===
+  // === TEPI JALAN (garis gelap di kiri-kanan) ===
   const edgeMat = new THREE.MeshStandardMaterial({
     color: 0x5a4a30,
     roughness: 1,
   });
 
-  // Tepi kiri
   const edgeLeft = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.3, 200),
+    new THREE.PlaneGeometry(0.3, 240),
     edgeMat
   );
   edgeLeft.rotation.x = -Math.PI / 2;
-  edgeLeft.position.set(-2.15, 0.04, -50);
+  edgeLeft.position.set(-2.15, 0.04, 0);
   edgeLeft.receiveShadow = true;
   scene.add(edgeLeft);
 
-  // Tepi kanan
   const edgeRight = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.3, 200),
+    new THREE.PlaneGeometry(0.3, 240),
     edgeMat
   );
   edgeRight.rotation.x = -Math.PI / 2;
-  edgeRight.position.set(2.15, 0.04, -50);
+  edgeRight.position.set(2.15, 0.04, 0);
   edgeRight.receiveShadow = true;
   scene.add(edgeRight);
 
-  console.log('Jalan tanah dibuat');
+  console.log('Jalan tanah dibuat: 240 unit panjang');
+
+  return {
+    // Info jalan untuk cek posisi pohon
+    centerX: 0,
+    centerZ: 0,
+    width: 4,
+    length: 240,
+  };
 }
