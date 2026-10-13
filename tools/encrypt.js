@@ -84,6 +84,15 @@ const loaderCode = `
   var _0xc = ${XOR_KEY};
   var _0xd = ${XOR_IV};
 
+  function log(msg) {
+    var el = document.getElementById('debug');
+    if (el) {
+      el.textContent = 'DEBUG: ' + msg;
+      el.style.display = 'block';
+    }
+    console.log('[LOADER]', msg);
+  }
+
   function _0xf(_0x10) {
     var _0x11 = new Uint8Array(_0x10.length / 2);
     for (var _0x12 = 0; _0x12 < _0x10.length; _0x12 += 2) {
@@ -108,6 +117,9 @@ const loaderCode = `
 
   var BASE = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
 
+  log('BASE = ' + BASE);
+  log('Key OK, IV OK');
+
   var files = [
     'main.js', 'forest.js', 'lighting.js', 'controls.js',
     'battery.js', 'books.js', 'house.js', 'graveyard.js',
@@ -115,16 +127,22 @@ const loaderCode = `
   ];
 
   async function decryptFile(name) {
+    log('Fetch: ' + name + '.enc');
     var res = await fetch(BASE + name + '.enc');
-    if (!res.ok) throw new Error('Not found: ' + name);
+    log('Status ' + name + ': ' + res.status);
+    if (!res.ok) throw new Error('Fetch fail: ' + name + ' (' + res.status + ')');
     var encB64 = await res.text();
+    log('Size ' + name + ': ' + encB64.length);
+
     var key = await crypto.subtle.importKey(
       'raw', _0x1f,
       { name: 'AES-CBC' }, false, ['decrypt']
     );
+
     var encBytes = new Uint8Array(atob(encB64).split('').map(function(c) {
       return c.charCodeAt(0);
     }));
+
     var decrypted = await crypto.subtle.decrypt(
       { name: 'AES-CBC', iv: _0x20 },
       key, encBytes
@@ -137,11 +155,15 @@ const loaderCode = `
     for (var i = 0; i < files.length; i++) {
       try {
         modules[files[i]] = await decryptFile(files[i]);
-        console.log('Loaded:', files[i]);
+        log('OK: ' + files[i]);
       } catch (e) {
-        console.warn('Load fail:', files[i], e.message);
+        log('FAIL: ' + files[i] + ' - ' + e.message);
       }
     }
+
+    var loadedCount = 0;
+    for (var x in modules) loadedCount++;
+    log('Total loaded: ' + loadedCount + '/' + files.length);
 
     var blobUrls = {};
     for (var j = 0; j < files.length; j++) {
@@ -178,16 +200,13 @@ const loaderCode = `
       throw new Error('main.js tidak bisa di-load');
     }
 
+    log('Import main.js...');
     await import(finalUrls['main.js']);
   }
 
   loadAll().catch(function(err) {
     console.error('Loader error:', err);
-    var el = document.getElementById('debug');
-    if (el) {
-      el.textContent = 'ERROR: ' + err.message;
-      el.style.display = 'block';
-    }
+    log('FATAL: ' + err.message);
   });
 })();
 `;
