@@ -74,18 +74,16 @@ function splitHex(hex, parts) {
 const keyParts = splitHex(keyHex, 24);
 const ivParts = splitHex(ivHex, 20);
 
-const XOR_KEY = Math.floor(Math.random() * 200) + 50;
-const XOR_IV = Math.floor(Math.random() * 200) + 50;
-
-// Key dan IV TIDAK di-XOR — dipakai apa adanya di loader
-// XOR hanya untuk obfuscate string yang disimpan
-
 const loaderCode = `
 (function() {
   var LOGS = [];
 
   function log(msg) {
     LOGS.push(msg);
+    console.log('[LOADER]', msg);
+  }
+
+  function showLogs() {
     var el = document.getElementById('debug');
     if (el) {
       el.textContent = LOGS.join('\\n');
@@ -96,14 +94,18 @@ const loaderCode = `
       el.style.overflow = 'auto';
       el.style.zIndex = '99999';
     }
-    console.log('[LOADER]', msg);
   }
 
-  log('window.crypto=' + (typeof window.crypto));
-  log('crypto.subtle=' + (typeof (window.crypto && window.crypto.subtle)));
+  function hideLogs() {
+    var el = document.getElementById('debug');
+    if (el) {
+      el.style.display = 'none';
+    }
+  }
 
   if (!window.crypto || !window.crypto.subtle) {
     log('FATAL: crypto.subtle TIDAK DIDUKUNG');
+    showLogs();
     return;
   }
 
@@ -121,12 +123,8 @@ const loaderCode = `
   var _0x1d = _0xa.join('');
   var _0x1e = _0xb.join('');
 
-  // Key dan IV LANGSUNG dari hex — TIDAK di-XOR lagi
   var _0x1f = _0xf(_0x1d);
   var _0x20 = _0xf(_0x1e);
-
-  log('Key length=' + _0x1f.length);
-  log('IV length=' + _0x20.length);
 
   var BASE = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
   log('BASE=' + BASE);
@@ -138,12 +136,9 @@ const loaderCode = `
   ];
 
   async function decryptFile(name) {
-    log('FETCH:' + name);
     var res = await fetch(BASE + name + '.enc');
-    log('STATUS:' + name + '=' + res.status);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     var encB64 = await res.text();
-    log('SIZE:' + name + '=' + encB64.length);
 
     var key = await crypto.subtle.importKey(
       'raw', _0x1f,
@@ -153,14 +148,11 @@ const loaderCode = `
     var encBytes = new Uint8Array(atob(encB64).split('').map(function(c) {
       return c.charCodeAt(0);
     }));
-    log('ENCBYTES:' + name + '=' + encBytes.length);
 
-    log('DECRYPT:' + name);
     var decrypted = await crypto.subtle.decrypt(
       { name: 'AES-CBC', iv: _0x20 },
       key, encBytes
     );
-    log('DECRYPT_OK:' + name);
     return new TextDecoder().decode(decrypted);
   }
 
@@ -171,8 +163,7 @@ const loaderCode = `
         modules[files[i]] = await decryptFile(files[i]);
         log('OK:' + files[i]);
       } catch (e) {
-        var msg = e.message || e.name || String(e) || 'unknown';
-        log('FAIL:' + files[i] + '=' + msg);
+        log('FAIL:' + files[i] + '=' + (e.message || e.name || 'unknown'));
       }
     }
 
@@ -182,6 +173,7 @@ const loaderCode = `
 
     if (loadedCount === 0) {
       log('SEMUA FILE GAGAL DECRYPT');
+      showLogs();
       return;
     }
 
@@ -218,16 +210,25 @@ const loaderCode = `
 
     if (!finalUrls['main.js']) {
       log('NO_MAIN_BLOB');
+      showLogs();
       return;
     }
 
     log('IMPORT main.js...');
-    await import(finalUrls['main.js']);
-    log('SUKSES');
+    try {
+      await import(finalUrls['main.js']);
+      log('SUKSES');
+      // SEMBUNYIKAN LOG setelah 2 detik kalau sukses
+      setTimeout(hideLogs, 2000);
+    } catch (e) {
+      log('IMPORT_FAIL:' + (e.message || e.name || 'unknown'));
+      showLogs();
+    }
   }
 
   loadAll().catch(function(err) {
-    log('FATAL:' + (err.message || err.name || String(err)));
+    log('FATAL:' + (err.message || err.name || 'unknown'));
+    showLogs();
   });
 })();
 `;
