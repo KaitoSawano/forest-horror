@@ -114,16 +114,9 @@ const loaderCode = `
     'ui.js', 'audio.js', 'minimap.js'
   ];
 
-  function hexToBytes(hex) {
-    var bytes = new Uint8Array(hex.length / 2);
-    for (var i = 0; i < hex.length; i += 2) {
-      bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
-    }
-    return bytes;
-  }
-
   async function decryptFile(name) {
     var res = await fetch(BASE + name + '.enc');
+    if (!res.ok) throw new Error('Not found: ' + name);
     var encB64 = await res.text();
     var key = await crypto.subtle.importKey(
       'raw', _0x1f,
@@ -144,8 +137,9 @@ const loaderCode = `
     for (var i = 0; i < files.length; i++) {
       try {
         modules[files[i]] = await decryptFile(files[i]);
+        console.log('Loaded:', files[i]);
       } catch (e) {
-        console.warn('Load fail:', files[i], e);
+        console.warn('Load fail:', files[i], e.message);
       }
     }
 
@@ -169,6 +163,8 @@ const loaderCode = `
 
       for (var m = 0; m < files.length; m++) {
         var other = files[m];
+        if (!blobUrls[other]) continue;
+
         var escaped = other.replace('.', '\\\\.');
         var re = new RegExp("from ['\\\"]\\\\./" + escaped + "['\\\"]", 'g');
         code = code.replace(re, "from '" + blobUrls[other] + "'");
@@ -176,6 +172,10 @@ const loaderCode = `
 
       var blob2 = new Blob([code], { type: 'application/javascript' });
       finalUrls[name2] = URL.createObjectURL(blob2);
+    }
+
+    if (!finalUrls['main.js']) {
+      throw new Error('main.js tidak bisa di-load');
     }
 
     await import(finalUrls['main.js']);
