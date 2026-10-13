@@ -20,7 +20,7 @@ function showError(msg) {
 window.addEventListener('error', (e) => showError('ERROR: ' + e.message));
 window.addEventListener('unhandledrejection', (e) => showError('REJECT: ' + (e.reason?.message || e.reason)));
 
-// === FUNGSI BIKIN LANGIT BINTANG ===
+// === FUNGSI BIKIN LANGIT BINTANG KECIL-KECIL ===
 function createStarSky() {
   const width = 2048;
   const height = 1024;
@@ -29,27 +29,28 @@ function createStarSky() {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  // Gradient langit: hitam kebiruan di atas, sedikit coklat di horizon
+  // Gradient langit: hitam kebiruan di atas, coklat di horizon
   const grad = ctx.createLinearGradient(0, 0, 0, height);
   grad.addColorStop(0, '#050508');
   grad.addColorStop(0.6, '#0a0a12');
-  grad.addColorStop(1, '#1a1210');
+  grad.addColorStop(1, '#151015');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, width, height);
 
-  // Gambar bintang
-  for (let i = 0; i < 1500; i++) {
+  // === BINTANG KECIL-KECIL (tanpa glow) ===
+  for (let i = 0; i < 2000; i++) {
     const x = Math.random() * width;
-    const y = Math.random() * height * 0.75;
-    const r = Math.random() * 1.5 + 0.3;
-    const alpha = Math.random() * 0.7 + 0.3;
+    const y = Math.random() * height * 0.8;
+    // Bintang SANGAT kecil
+    const r = Math.random() * 0.8 + 0.2;
+    const alpha = Math.random() * 0.5 + 0.4;
 
-    // Warna bintang: putih, biru muda, atau kekuningan
+    // Warna: putih, biru muda, atau kekuningan
     const colorRoll = Math.random();
     let color;
-    if (colorRoll < 0.7) {
+    if (colorRoll < 0.75) {
       color = `rgba(255, 255, 255, ${alpha})`;
-    } else if (colorRoll < 0.9) {
+    } else if (colorRoll < 0.92) {
       color = `rgba(200, 220, 255, ${alpha})`;
     } else {
       color = `rgba(255, 240, 200, ${alpha})`;
@@ -61,24 +62,15 @@ function createStarSky() {
     ctx.fill();
   }
 
-  // Beberapa bintang lebih besar
-  for (let i = 0; i < 30; i++) {
+  // === BINTANG SEDANG (beberapa saja, tanpa glow besar) ===
+  for (let i = 0; i < 40; i++) {
     const x = Math.random() * width;
     const y = Math.random() * height * 0.7;
-    const r = Math.random() * 2 + 1.5;
+    const r = Math.random() * 1 + 1.2;
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Glow
-    const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
-    glow.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-    glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(x, y, r * 4, 0, Math.PI * 2);
     ctx.fill();
   }
 
