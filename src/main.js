@@ -25,11 +25,11 @@ try {
 
   const scene = new THREE.Scene();
 
-  // === LANGIT COKLAT GELAP ===
-  scene.background = new THREE.Color(0x1a0f0a);
+  // === LANGIT HITAM KEBIRUAN (MALAM) ===
+  scene.background = new THREE.Color(0x0a0a12);
 
-  // === KABUT COKLAT TEBAL ===
-  scene.fog = new THREE.FogExp2(0x1a0f0a, 0.15);
+  // === KABUT LEBIH TIPIS ===
+  scene.fog = new THREE.FogExp2(0x0a0a12, 0.08);
 
   const camera = new THREE.PerspectiveCamera(
     75,
