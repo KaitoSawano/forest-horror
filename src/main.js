@@ -1,4 +1,4 @@
-// Umbra Grove
+// UmbraGrove
 // Copyright (C) 2026-present AtticForge
 //
 // This program is free software: you can redistribute it and/or modify
