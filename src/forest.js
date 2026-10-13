@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 function createGroundTexture() {
   const size = 64;
@@ -58,14 +59,16 @@ export function createForest(scene) {
   ground.receiveShadow = true;
   scene.add(ground);
 
+  const obstacles = [];
+  const treeData = [];
+
+  // Pohon primitive sebagai fallback
   const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 4, 6);
   const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a });
   const leafGeo = new THREE.ConeGeometry(1.5, 3, 7);
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x1a2a1a });
 
-  const obstacles = [];
-  const treeData = [];
-
+  // Generate 100 pohon primitive dulu (biar selalu ada)
   for (let i = 0; i < 100; i++) {
     const tree = new THREE.Group();
 
@@ -90,16 +93,66 @@ export function createForest(scene) {
     tree.scale.set(s, s, s);
 
     scene.add(tree);
-
     obstacles.push({ x, z, radius: 0.5 * s });
-
-    // Simpan data pohon untuk minimap
-    treeData.push({
-      x,
-      z,
-      size: 2 + s * 2,   // ukuran di peta
-    });
+    treeData.push({ x, z, size: 2 + s * 2 });
   }
+
+  // Coba load tree.glb — kalau berhasil, ganti pohon primitive
+  const loader = new GLTFLoader();
+  loader.load(
+    './assets/tree.glb',
+    (gltf) => {
+      // Hapus pohon primitive
+      for (let i = scene.children.length - 1; i >= 0; i--) {
+        const child = scene.children[i];
+        if (child.isGroup && child.children.length === 2) {
+          if (child.children[0].geometry === trunkGeo) {
+            scene.remove(child);
+          }
+        }
+      }
+
+      // Reset obstacles dan treeData
+      obstacles.length = 0;
+      treeData.length = 0;
+
+      const template = gltf.scene;
+      const baseScale = 2.0;
+
+      for (let i = 0; i < 60; i++) {
+        const tree = template.clone(true);
+
+        tree.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 8 + Math.random() * 112;
+        const x = Math.cos(angle) * dist;
+        const z = Math.sin(angle) * dist;
+
+        tree.position.set(x, 0, z);
+        tree.rotation.y = Math.random() * Math.PI * 2;
+
+        const s = baseScale * (0.7 + Math.random() * 0.6);
+        tree.scale.set(s, s, s);
+
+        scene.add(tree);
+
+        obstacles.push({ x, z, radius: 1.0 * s });
+        treeData.push({ x, z, size: 3 });
+      }
+
+      console.log('Tree.glb loaded, 60 pohon');
+    },
+    undefined,
+    (err) => {
+      console.warn('Gagal load tree.glb, pakai pohon primitive');
+    }
+  );
 
   return { obstacles, trees: treeData };
 }
