@@ -168,6 +168,7 @@ try {
     jumpBtnEl.style.display = 'block';
     crosshairEl.style.display = 'block';
     minimap.show();
+    hud.show();
 
     audio.stopMenuMusic();
     audio.forceStart();
@@ -219,6 +220,7 @@ try {
       flashlight.update(dt, state, hud);
       books.update(dt, state.playerPos);
       state.books.collected = books.getCollected();
+      hud.update(state);
       minimap.update(state);
       state.time = (state.time + dt * 60) % (24 * 60);
     }
