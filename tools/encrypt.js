@@ -1,3 +1,82 @@
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+const SRC_DIR = path.join(__dirname, '..', 'src');
+const OUT_DIR = path.join(__dirname, '..', 'src-encrypted');
+
+const ENCRYPTION_KEY = crypto.randomBytes(32);
+const IV = crypto.randomBytes(16);
+
+function encryptFile(inputPath, outputPath) {
+  const data = fs.readFileSync(inputPath, 'utf8');
+  const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, IV);
+  let encrypted = cipher.update(data, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  fs.writeFileSync(outputPath, encrypted);
+}
+
+function copyDir(src, dest) {
+  if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+function processDir(srcDir, outDir) {
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = path.join(srcDir, entry.name);
+    const outPath = path.join(outDir, entry.name);
+
+    if (entry.isDirectory()) {
+      if (entry.name === 'lib' || entry.name === 'assets' || entry.name === 'ui') {
+        copyDir(srcPath, outPath);
+      } else {
+        processDir(srcPath, outPath);
+      }
+    } else if (entry.name.endsWith('.js')) {
+      encryptFile(srcPath, outPath + '.enc');
+    } else {
+      fs.copyFileSync(srcPath, outPath);
+    }
+  }
+}
+
+if (fs.existsSync(OUT_DIR)) {
+  fs.rmSync(OUT_DIR, { recursive: true });
+}
+
+processDir(SRC_DIR, OUT_DIR);
+
+const keyHex = ENCRYPTION_KEY.toString('hex');
+const ivHex = IV.toString('hex');
+
+function splitHex(hex, parts) {
+  const len = hex.length;
+  const chunkSize = Math.ceil(len / parts);
+  const result = [];
+  for (let i = 0; i < len; i += chunkSize) {
+    result.push(hex.substring(i, i + chunkSize));
+  }
+  return result;
+}
+
+const keyParts = splitHex(keyHex, 24);
+const ivParts = splitHex(ivHex, 20);
+
+const XOR_KEY = Math.floor(Math.random() * 200) + 50;
+const XOR_IV = Math.floor(Math.random() * 200) + 50;
+
 const loaderCode = `
 (function() {
   var _0xa = [${keyParts.map(p => `"${p}"`).join(',')}];
@@ -35,60 +114,85 @@ const loaderCode = `
     'ui.js', 'audio.js', 'minimap.js'
   ];
 
-  var modules = {};
-  var loadedCount = 0;
-
-  function loadFile(name, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', BASE + name + '.enc', true);
-    xhr.onload = function() {
-      if (xhr.status === 200 || xhr.status === 0) {
-        var encB64 = xhr.responseText;
-        decryptAndStore(name, encB64, callback);
-      } else {
-        callback(false);
-      }
-    };
-    xhr.onerror = function() { callback(false); };
-    xhr.send();
-  }
-
-  function decryptAndStore(name, encB64, callback) {
-    try {
-      var encBytes = base64ToBytes(encB64);
-      var key = _0x1f;
-      var iv = _0x20;
-
-      // Pakai AES via forge atau fallback JS
-      // Kita pakai JS pure AES-CBC (library kecil)
-      // Sementara, kita skip decrypt — pakai base64 decode dulu
-      // TODO: implement AES JS
-      callback(false);
-    } catch (e) {
-      callback(false);
-    }
-  }
-
-  function base64ToBytes(b64) {
-    var bin = atob(b64);
-    var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) {
-      bytes[i] = bin.charCodeAt(i);
+  function hexToBytes(hex) {
+    var bytes = new Uint8Array(hex.length / 2);
+    for (var i = 0; i < hex.length; i += 2) {
+      bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
     }
     return bytes;
   }
 
-  // Fallback: muat versi non-encrypt
-  var script = document.createElement('script');
-  script.type = 'module';
-  script.src = BASE + 'main.js';
-  script.onerror = function() {
+  async function decryptFile(name) {
+    var res = await fetch(BASE + name + '.enc');
+    var encB64 = await res.text();
+    var key = await crypto.subtle.importKey(
+      'raw', _0x1f,
+      { name: 'AES-CBC' }, false, ['decrypt']
+    );
+    var encBytes = new Uint8Array(atob(encB64).split('').map(function(c) {
+      return c.charCodeAt(0);
+    }));
+    var decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-CBC', iv: _0x20 },
+      key, encBytes
+    );
+    return new TextDecoder().decode(decrypted);
+  }
+
+  async function loadAll() {
+    var modules = {};
+    for (var i = 0; i < files.length; i++) {
+      try {
+        modules[files[i]] = await decryptFile(files[i]);
+      } catch (e) {
+        console.warn('Load fail:', files[i], e);
+      }
+    }
+
+    var blobUrls = {};
+    for (var j = 0; j < files.length; j++) {
+      var name = files[j];
+      if (!modules[name]) continue;
+      var blob = new Blob([modules[name]], { type: 'application/javascript' });
+      blobUrls[name] = URL.createObjectURL(blob);
+    }
+
+    var finalUrls = {};
+    for (var k = 0; k < files.length; k++) {
+      var name2 = files[k];
+      if (!modules[name2]) continue;
+      var code = modules[name2];
+
+      code = code.replace(/from ['"]three['"]/g, "from '" + BASE + "lib/three.module.js'");
+      code = code.replace(/from ['"]three\\/addons\\/loaders\\/GLTFLoader\\.js['"]/g, "from '" + BASE + "lib/GLTFLoader.js'");
+      code = code.replace(/from ['"]three\\/addons\\/utils\\/BufferGeometryUtils\\.js['"]/g, "from '" + BASE + "lib/BufferGeometryUtils.js'");
+
+      for (var m = 0; m < files.length; m++) {
+        var other = files[m];
+        var escaped = other.replace('.', '\\\\.');
+        var re = new RegExp("from ['\\\"]\\\\./" + escaped + "['\\\"]", 'g');
+        code = code.replace(re, "from '" + blobUrls[other] + "'");
+      }
+
+      var blob2 = new Blob([code], { type: 'application/javascript' });
+      finalUrls[name2] = URL.createObjectURL(blob2);
+    }
+
+    await import(finalUrls['main.js']);
+  }
+
+  loadAll().catch(function(err) {
+    console.error('Loader error:', err);
     var el = document.getElementById('debug');
     if (el) {
-      el.textContent = 'ERROR: Gagal load main.js';
+      el.textContent = 'ERROR: ' + err.message;
       el.style.display = 'block';
     }
-  };
-  document.body.appendChild(script);
+  });
 })();
 `;
+
+fs.writeFileSync(path.join(OUT_DIR, 'loader.js'), loaderCode);
+
+console.log('Selesai! File ter-encrypt ada di:', OUT_DIR);
+console.log('Loader size:', loaderCode.length, 'bytes');
