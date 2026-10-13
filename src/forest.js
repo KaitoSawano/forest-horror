@@ -62,7 +62,7 @@ export function createForest(scene) {
   const obstacles = [];
   const treeData = [];
 
-  // Pohon primitive (hijau) — banyak
+  // === POHON PRIMITIVE (hijau) ===
   const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 4, 6);
   const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a });
   const leafGeo = new THREE.ConeGeometry(1.5, 3, 7);
@@ -96,15 +96,17 @@ export function createForest(scene) {
     treeData.push({ x, z, size: 2 + s * 2 });
   }
 
-  // Pohon mati (GLB) — aksen horor
+  // === POHON MATI (GLB) — hanya 5, ukuran kecil ===
   const loader = new GLTFLoader();
   loader.load(
     './assets/tree-small.glb',
     (gltf) => {
       const template = gltf.scene;
-      const baseScale = 2.5;
+      // Skala JAUH LEBIH KECIL — 0.3 (sebelumnya 2.5)
+      const baseScale = 0.3;
 
-      for (let i = 0; i < 25; i++) {
+      // Cuma 5 pohon mati (sebelumnya 25)
+      for (let i = 0; i < 5; i++) {
         const tree = template.clone(true);
 
         tree.traverse((child) => {
@@ -115,7 +117,7 @@ export function createForest(scene) {
         });
 
         const angle = Math.random() * Math.PI * 2;
-        const dist = 10 + Math.random() * 110;
+        const dist = 15 + Math.random() * 100;
         const x = Math.cos(angle) * dist;
         const z = Math.sin(angle) * dist;
 
@@ -127,11 +129,11 @@ export function createForest(scene) {
 
         scene.add(tree);
 
-        obstacles.push({ x, z, radius: 1.0 * s });
-        treeData.push({ x, z, size: 4 });
+        obstacles.push({ x, z, radius: 2.0 * s });
+        treeData.push({ x, z, size: 5 });
       }
 
-      console.log('Pohon mati loaded: 25');
+      console.log('Pohon mati loaded: 5');
     },
     undefined,
     (err) => {
