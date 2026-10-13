@@ -77,6 +77,9 @@ const ivParts = splitHex(ivHex, 20);
 const XOR_KEY = Math.floor(Math.random() * 200) + 50;
 const XOR_IV = Math.floor(Math.random() * 200) + 50;
 
+// Key dan IV TIDAK di-XOR — dipakai apa adanya di loader
+// XOR hanya untuk obfuscate string yang disimpan
+
 const loaderCode = `
 (function() {
   var LOGS = [];
@@ -98,18 +101,14 @@ const loaderCode = `
 
   log('window.crypto=' + (typeof window.crypto));
   log('crypto.subtle=' + (typeof (window.crypto && window.crypto.subtle)));
-  log('crypto.subtle.importKey=' + (typeof (window.crypto && window.crypto.subtle && window.crypto.subtle.importKey)));
 
   if (!window.crypto || !window.crypto.subtle) {
     log('FATAL: crypto.subtle TIDAK DIDUKUNG');
-    log('Butuh HTTPS atau localhost');
     return;
   }
 
   var _0xa = [${keyParts.map(p => `"${p}"`).join(',')}];
   var _0xb = [${ivParts.map(p => `"${p}"`).join(',')}];
-  var _0xc = ${XOR_KEY};
-  var _0xd = ${XOR_IV};
 
   function _0xf(_0x10) {
     var _0x11 = new Uint8Array(_0x10.length / 2);
@@ -119,19 +118,12 @@ const loaderCode = `
     return _0x11;
   }
 
-  function _0x13(_0x14, _0x15) {
-    var _0x16 = new Uint8Array(_0x14.length);
-    for (var _0x17 = 0; _0x17 < _0x14.length; _0x17++) {
-      _0x16[_0x17] = _0x14[_0x17] ^ _0x15;
-    }
-    return _0x16;
-  }
-
   var _0x1d = _0xa.join('');
   var _0x1e = _0xb.join('');
 
-  var _0x1f = _0x13(_0xf(_0x1d), _0xc);
-  var _0x20 = _0x13(_0xf(_0x1e), _0xd);
+  // Key dan IV LANGSUNG dari hex — TIDAK di-XOR lagi
+  var _0x1f = _0xf(_0x1d);
+  var _0x20 = _0xf(_0x1e);
 
   log('Key length=' + _0x1f.length);
   log('IV length=' + _0x20.length);
@@ -153,12 +145,10 @@ const loaderCode = `
     var encB64 = await res.text();
     log('SIZE:' + name + '=' + encB64.length);
 
-    log('IMPORTKEY:' + name);
     var key = await crypto.subtle.importKey(
       'raw', _0x1f,
       { name: 'AES-CBC' }, false, ['decrypt']
     );
-    log('IMPORTKEY_OK:' + name);
 
     var encBytes = new Uint8Array(atob(encB64).split('').map(function(c) {
       return c.charCodeAt(0);
@@ -183,7 +173,6 @@ const loaderCode = `
       } catch (e) {
         var msg = e.message || e.name || String(e) || 'unknown';
         log('FAIL:' + files[i] + '=' + msg);
-        log('STACK:' + (e.stack || 'no stack').substring(0, 100));
       }
     }
 
