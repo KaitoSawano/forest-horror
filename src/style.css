@@ -383,3 +383,26 @@ html, body {
   border-radius: 6px;
   pointer-events: none;
 }
+
+#book-counter {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #cc1111;
+  font-family: 'Courier New', monospace;
+  font-size: 32px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow:
+    0 0 8px #ff0000,
+    0 0 20px #aa0000;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+#book-counter.visible {
+  opacity: 1;
+}
