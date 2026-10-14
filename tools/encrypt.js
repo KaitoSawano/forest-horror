@@ -103,9 +103,25 @@ const filesArray = jsFiles.map(f => `'${f}'`).join(', ');
 
 const loaderCode = `
 (function() {
-  // === HIDE STATUS BAR — DELAY 3 DETIK SETELAH SWIPE ===
+  // === NATIVE FEEL ===
+  document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+  document.addEventListener('selectstart', function(e) { e.preventDefault(); });
+  document.addEventListener('dragstart', function(e) { e.preventDefault(); });
+  document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+
+  // === HIDE SPLASH SCREEN ===
+  function hideSplash() {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+      try {
+        window.Capacitor.Plugins.SplashScreen.hide();
+      } catch (e) {}
+    }
+  }
+  setTimeout(hideSplash, 100);
+
+  // === HIDE STATUS BAR — DELAY 3 DETIK ===
   var lastUserInteraction = Date.now();
-  var HIDE_DELAY = 3000; // 3 detik
+  var HIDE_DELAY = 3000;
 
   function hideStatusBar() {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
@@ -116,17 +132,13 @@ const loaderCode = `
     }
   }
 
-  // Deteksi interaksi user (swipe dari atas)
-  // Setiap kali user sentuh layar di area atas, reset timer
   document.addEventListener('touchstart', function(e) {
     var touch = e.touches[0];
     if (touch && touch.clientY < 100) {
-      // User sentuh area atas — reset timer
       lastUserInteraction = Date.now();
     }
   }, { passive: true });
 
-  // Cek setiap 500ms — apakah sudah lewat 3 detik?
   setInterval(function() {
     var elapsed = Date.now() - lastUserInteraction;
     if (elapsed > HIDE_DELAY) {
@@ -134,10 +146,8 @@ const loaderCode = `
     }
   }, 500);
 
-  // Panggil langsung
   hideStatusBar();
 
-  // Saat app kembali dari background
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
       lastUserInteraction = Date.now();
@@ -149,6 +159,17 @@ const loaderCode = `
     lastUserInteraction = Date.now();
     setTimeout(hideStatusBar, 100);
   });
+
+  // === LOADING BAR ===
+  var loadingBar = document.getElementById('loading-bar');
+  var loadingText = document.getElementById('loading-text');
+
+  function updateLoading(percent, text) {
+    if (loadingBar) loadingBar.style.width = percent + '%';
+    if (loadingText && text) loadingText.textContent = text;
+  }
+
+  updateLoading(5, 'Menyiapkan...');
 
   var LOGS = [];
 
@@ -233,10 +254,13 @@ const loaderCode = `
       try {
         modules[files[i]] = await decryptFile(files[i]);
         log('OK:' + files[i]);
+        updateLoading(10 + (i / files.length) * 70, 'Memuat ' + files[i] + '...');
       } catch (e) {
         log('FAIL:' + files[i] + '=' + (e.message || e.name || 'unknown'));
       }
     }
+
+    updateLoading(85, 'Menjalankan...');
 
     var loadedCount = 0;
     for (var x in modules) loadedCount++;
@@ -285,10 +309,18 @@ const loaderCode = `
       return;
     }
 
+    updateLoading(95, 'Menjalankan game...');
     log('IMPORT main.js...');
     try {
       await import(finalUrls['main.js']);
       log('SUKSES');
+      updateLoading(100, 'Selesai');
+
+      setTimeout(function() {
+        var loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) loadingScreen.classList.add('hidden');
+      }, 500);
+
       setTimeout(hideLogs, 2000);
       setTimeout(hideStatusBar, 100);
       setTimeout(hideStatusBar, 500);
