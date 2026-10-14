@@ -119,7 +119,10 @@ const filesArray = jsFiles.map(f => `'${f}'`).join(', ');
 
 const loaderCode = `
 (function() {
-  // === HIDE STATUS BAR — AUTO REPEAT ===
+  // === HIDE STATUS BAR — DELAY 3 DETIK SETELAH SWIPE ===
+  var lastUserInteraction = Date.now();
+  var HIDE_DELAY = 3000; // 3 detik
+
   function hideStatusBar() {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
       try {
@@ -128,23 +131,38 @@ const loaderCode = `
       } catch (e) {}
     }
   }
-  
+
+  // Deteksi interaksi user (swipe dari atas)
+  // Setiap kali user sentuh layar di area atas, reset timer
+  document.addEventListener('touchstart', function(e) {
+    var touch = e.touches[0];
+    if (touch && touch.clientY < 100) {
+      // User sentuh area atas — reset timer
+      lastUserInteraction = Date.now();
+    }
+  }, { passive: true });
+
+  // Cek setiap 500ms — apakah sudah lewat 3 detik?
+  setInterval(function() {
+    var elapsed = Date.now() - lastUserInteraction;
+    if (elapsed > HIDE_DELAY) {
+      hideStatusBar();
+    }
+  }, 500);
+
   // Panggil langsung
   hideStatusBar();
-  
-  // Ulangi setiap 1 detik untuk pastikan status bar tetap hilang
-  setInterval(hideStatusBar, 1000);
-  
-  // Juga saat app kembali dari background
+
+  // Saat app kembali dari background
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
+      lastUserInteraction = Date.now();
       setTimeout(hideStatusBar, 100);
-      setTimeout(hideStatusBar, 500);
     }
   });
-  
-  // Saat window focus
+
   window.addEventListener('focus', function() {
+    lastUserInteraction = Date.now();
     setTimeout(hideStatusBar, 100);
   });
 
