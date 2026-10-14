@@ -1,7 +1,3 @@
-// UmbraGrove
-// Copyright (C) 2026-present AtticForge
-// ... (header GPL lengkap)
-
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
@@ -33,10 +29,11 @@ export function createCar(scene, obstacles) {
         interiorLight.position.set(0, 1.5, 0);
         car.add(interiorLight);
 
+        // Obstacle — radius KECIL biar pemain tidak terjebak
         obstacles.push({
           x: carX,
           z: carZ,
-          radius: 3.0,
+          radius: 2.0,
         });
 
         console.log('Mobil loaded di:', carX, carZ);
@@ -45,6 +42,7 @@ export function createCar(scene, obstacles) {
       undefined,
       (err) => {
         console.warn('Gagal load car.glb:', err);
+        // TIDAK push obstacle — biar pemain tidak terjebak
         resolve(null);
       }
     );
