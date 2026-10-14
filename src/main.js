@@ -26,6 +26,12 @@ import { createHouse } from './house.js';
 import { createGraveyard } from './graveyard.js';
 import { Minimap } from './minimap.js';
 import { createPath } from './path.js';
+import { createCar } from './car.js';
+
+// UmbraGrove
+// Copyright (C) 2026-present AtticForge
+// ... (header GPL lengkap)
+
 function showError(msg) {
   const el = document.getElementById('debug');
   if (el) {
@@ -97,7 +103,6 @@ try {
   scene.background = createStarSky();
   scene.fog = new THREE.FogExp2(0x0a0a12, 0.08);
 
-  // === KAMERA DENGAN FOV DINAMIS ===
   const aspect = window.innerWidth / window.innerHeight;
   let fov = 75;
 
@@ -115,7 +120,8 @@ try {
     0.1,
     100
   );
-  camera.position.set(0, 1.7, 0);
+  // Spawn di sebelah mobil (pintu kiri terbuka)
+  camera.position.set(4, 1.7, -8);
   scene.add(camera);
 
   const renderer = new THREE.WebGLRenderer({
@@ -134,6 +140,7 @@ try {
   const obstacles = forestData.obstacles;
 
   createLighting(scene);
+  createCar(scene, obstacles);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
@@ -144,7 +151,7 @@ try {
   const books = new BookManager(scene, obstacles, MAP_BOUNDARY);
 
   const state = {
-    playerPos: new THREE.Vector3(0, 1.7, 0),
+    playerPos: new THREE.Vector3(4, 1.7, -8),
     time: 7 * 60,
     hp: 100,
     yaw: 0,
