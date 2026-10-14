@@ -66,16 +66,12 @@ jobs:
       - name: Apply fullscreen theme to styles.xml
         run: |
           STYLES=android/app/src/main/res/values/styles.xml
-          
-          # Cek apakah style sudah ada
           if grep -q 'AppTheme.NoActionBar.Fullscreen' $STYLES; then
             echo "Style fullscreen sudah ada"
           else
-            # Tambah style fullscreen sebelum tag </resources>
             sed -i 's|</resources>|    <style name="AppTheme.NoActionBar.Fullscreen" parent="AppTheme.NoActionBar">\n        <item name="android:windowFullscreen">true</item>\n        <item name="android:windowContentOverlay">@null</item>\n        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>\n        <item name="android:statusBarColor">@android:color/transparent</item>\n        <item name="android:navigationBarColor">@android:color/transparent</item>\n        <item name="android:windowDrawsSystemBarBackgrounds">false</item>\n    </style>\n</resources>|' $STYLES
             echo "Style fullscreen ditambahkan"
           fi
-          
           cat $STYLES
 
       - name: Apply fullscreen theme to manifest
@@ -83,6 +79,51 @@ jobs:
           MANIFEST=android/app/src/main/AndroidManifest.xml
           if grep -q 'android:theme="@style/AppTheme.NoActionBar"' $MANIFEST; then
             sed -i 's|android:theme="@style/AppTheme.NoActionBar"|android:theme="@style/AppTheme.NoActionBar.Fullscreen"|' $MANIFEST
+          fi
+
+      - name: Enable immersive fullscreen in MainActivity
+        run: |
+          MAINACTIVITY=$(find android -name "MainActivity.java" | head -1)
+          echo "MainActivity: $MAINACTIVITY"
+          if [ -n "$MAINACTIVITY" ]; then
+            if grep -q 'super.onCreate(savedInstanceState);' $MAINACTIVITY; then
+              python3 << 'PYEOF'
+import os
+mainactivity = os.environ.get('MAINACTIVITY', '')
+if not mainactivity:
+    import subprocess
+    result = subprocess.run(['find', 'android', '-name', 'MainActivity.java'], capture_output=True, text=True)
+    mainactivity = result.stdout.strip().split('\n')[0]
+
+if mainactivity and os.path.exists(mainactivity):
+    with open(mainactivity, 'r') as f:
+        content = f.read()
+    
+    immersive_code = '''
+        getWindow().getDecorView().setSystemUiVisibility(
+            android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
+            | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            | android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        );
+'''
+    
+    if 'SYSTEM_UI_FLAG_IMMERSIVE_STICKY' not in content:
+        content = content.replace(
+            'super.onCreate(savedInstanceState);',
+            'super.onCreate(savedInstanceState);' + immersive_code
+        )
+        with open(mainactivity, 'w') as f:
+            f.write(content)
+        print('Immersive fullscreen added to:', mainactivity)
+    else:
+        print('Immersive fullscreen already present')
+else:
+    print('MainActivity not found, skipping')
+PYEOF
+            fi
           fi
 
       - name: Sync web assets
