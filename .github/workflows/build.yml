@@ -40,7 +40,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wabt
           wat2wasm tools/decrypt.wat -o src/lib/decrypt.wasm || true
-          ls -la src/lib/decrypt.wasm || echo "WASM tidak dibuat, lanjut"
 
       - name: Encrypt JavaScript
         run: node tools/encrypt.js
@@ -63,23 +62,9 @@ jobs:
             sed -i 's/<activity/<activity android:screenOrientation="landscape"/' $MANIFEST
           fi
 
-      - name: Install StatusBar plugin
+      - name: Copy fullscreen theme
         run: |
-          cd android
-          ./gradlew clean
-          cd ..
-          npx cap sync android
-
-      - name: Apply fullscreen theme to styles.xml
-        run: |
-          STYLES=android/app/src/main/res/values/styles.xml
-          if grep -q 'AppTheme.NoActionBar.Fullscreen' $STYLES; then
-            echo "Style fullscreen sudah ada"
-          else
-            sed -i 's|</resources>|    <style name="AppTheme.NoActionBar.Fullscreen" parent="AppTheme.NoActionBar">\n        <item name="android:windowFullscreen">true</item>\n        <item name="android:windowContentOverlay">@null</item>\n        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>\n        <item name="android:statusBarColor">@android:color/transparent</item>\n        <item name="android:navigationBarColor">@android:color/transparent</item>\n        <item name="android:windowDrawsSystemBarBackgrounds">false</item>\n    </style>\n</resources>|' $STYLES
-            echo "Style fullscreen ditambahkan"
-          fi
-          cat $STYLES
+          cp tools/styles.xml android/app/src/main/res/values/styles.xml
 
       - name: Apply fullscreen theme to manifest
         run: |
@@ -87,6 +72,9 @@ jobs:
           if grep -q 'android:theme="@style/AppTheme.NoActionBar"' $MANIFEST; then
             sed -i 's|android:theme="@style/AppTheme.NoActionBar"|android:theme="@style/AppTheme.NoActionBar.Fullscreen"|' $MANIFEST
           fi
+
+      - name: Enable immersive fullscreen in MainActivity
+        run: python3 tools/patch-fullscreen.py
 
       - name: Sync web assets
         run: npx cap sync android
