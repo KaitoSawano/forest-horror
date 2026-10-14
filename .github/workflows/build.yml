@@ -62,7 +62,7 @@ jobs:
             sed -i 's/<activity/<activity android:screenOrientation="landscape"/' $MANIFEST
           fi
 
-      - name: Add fullscreen style to styles.xml
+      - name: Add fullscreen style
         run: python3 tools/patch-styles.py
 
       - name: Apply fullscreen theme to manifest
@@ -70,12 +70,13 @@ jobs:
           MANIFEST=android/app/src/main/AndroidManifest.xml
           if grep -q 'android:theme="@style/AppTheme.NoActionBar"' $MANIFEST; then
             sed -i 's|android:theme="@style/AppTheme.NoActionBar"|android:theme="@style/AppTheme.NoActionBar.Fullscreen"|' $MANIFEST
-            echo "Theme replaced with Fullscreen"
           fi
-          grep 'android:theme' $MANIFEST || echo "No theme found"
 
-      - name: Enable immersive fullscreen in MainActivity
+      - name: Enable immersive fullscreen
         run: python3 tools/patch-fullscreen.py
+
+      - name: Install HideNavbar plugin
+        run: python3 tools/patch-navbar.py
 
       - name: Sync web assets
         run: npx cap sync android
