@@ -27,6 +27,22 @@ import { createGraveyard } from './graveyard.js';
 import { Minimap } from './minimap.js';
 import { createPath } from './path.js';
 
+// UmbraGrove
+// Copyright (C) 2026-present AtticForge
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 function showError(msg) {
   const el = document.getElementById('debug');
   if (el) {
@@ -98,9 +114,25 @@ try {
   scene.background = createStarSky();
   scene.fog = new THREE.FogExp2(0x0a0a12, 0.08);
 
+  // === KAMERA DENGAN FOV DINAMIS ===
+  // FOV 75 untuk 16:9, naikkan untuk layar lebih panjang (20:9, 21:9)
+  const aspect = window.innerWidth / window.innerHeight;
+  let fov = 75;
+
+  if (aspect > 2.0) {
+    // Layar sangat panjang (20:9, 21:9) — naikkan FOV
+    fov = 90;
+  } else if (aspect > 1.8) {
+    // Layar panjang (19.5:9, 20:9)
+    fov = 85;
+  } else if (aspect > 1.7) {
+    // Layar standar modern (18:9, 19:9)
+    fov = 80;
+  }
+
   const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
+    fov,
+    aspect,
     0.1,
     100
   );
@@ -247,7 +279,8 @@ try {
   animate();
 
   window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const newAspect = window.innerWidth / window.innerHeight;
+    camera.aspect = newAspect;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
