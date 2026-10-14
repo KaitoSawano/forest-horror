@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -118,24 +119,34 @@ const filesArray = jsFiles.map(f => `'${f}'`).join(', ');
 
 const loaderCode = `
 (function() {
-  // === HIDE STATUS BAR ===
+  // === HIDE STATUS BAR — AUTO REPEAT ===
   function hideStatusBar() {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
       try {
         window.Capacitor.Plugins.StatusBar.hide();
         window.Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: true });
-        console.log('[LOADER] Status bar hidden');
-      } catch (e) {
-        console.log('[LOADER] StatusBar error:', e);
-      }
-    } else {
-      console.log('[LOADER] StatusBar plugin tidak tersedia');
+      } catch (e) {}
     }
   }
   
+  // Panggil langsung
   hideStatusBar();
-  setTimeout(hideStatusBar, 1000);
-  setTimeout(hideStatusBar, 3000);
+  
+  // Ulangi setiap 1 detik untuk pastikan status bar tetap hilang
+  setInterval(hideStatusBar, 1000);
+  
+  // Juga saat app kembali dari background
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+      setTimeout(hideStatusBar, 100);
+      setTimeout(hideStatusBar, 500);
+    }
+  });
+  
+  // Saat window focus
+  window.addEventListener('focus', function() {
+    setTimeout(hideStatusBar, 100);
+  });
 
   var LOGS = [];
 
@@ -278,6 +289,8 @@ const loaderCode = `
       log('SUKSES');
       setTimeout(hideLogs, 2000);
       setTimeout(hideStatusBar, 100);
+      setTimeout(hideStatusBar, 500);
+      setTimeout(hideStatusBar, 1000);
     } catch (e) {
       log('IMPORT_FAIL:' + (e.message || e.name || 'unknown'));
       showLogs();
