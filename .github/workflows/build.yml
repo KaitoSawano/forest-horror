@@ -63,32 +63,9 @@ jobs:
             sed -i 's/<activity/<activity android:screenOrientation="landscape"/' $MANIFEST
           fi
 
-      - name: Update fullscreen theme
+      - name: Copy fullscreen theme
         run: |
-          STYLES=android/app/src/main/res/values/styles.xml
-          cat > $STYLES << 'XMLEOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:background">@null</item>
-    </style>
-    <style name="AppTheme.NoActionBar.Fullscreen" parent="AppTheme.NoActionBar">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">false</item>
-    </style>
-</resources>
-XMLEOF
+          cp tools/styles.xml android/app/src/main/res/values/styles.xml
 
       - name: Apply fullscreen theme to manifest
         run: |
