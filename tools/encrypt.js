@@ -5,6 +5,23 @@ const crypto = require('crypto');
 const SRC_DIR = path.join(__dirname, '..', 'src');
 const OUT_DIR = path.join(__dirname, '..', 'src-encrypted');
 
+// === DAFTAR FILE JS YANG DI-ENCRYPT ===
+const JS_FILES = [
+  'main.js',
+  'forest.js',
+  'lighting.js',
+  'controls.js',
+  'battery.js',
+  'books.js',
+  'house.js',
+  'graveyard.js',
+  'ui.js',
+  'audio.js',
+  'minimap.js',
+  'path.js',
+  'car.js'
+];
+
 const ENCRYPTION_KEY = crypto.randomBytes(32);
 const IV = crypto.randomBytes(16);
 
@@ -30,58 +47,43 @@ function copyDir(src, dest) {
   }
 }
 
-function discoverJsFiles(dir, baseDir = dir) {
-  const result = [];
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-
-    if (entry.isDirectory()) {
-      if (entry.name === 'lib' || entry.name === 'assets' || entry.name === 'ui') {
-        continue;
-      }
-      result.push(...discoverJsFiles(fullPath, baseDir));
-    } else if (entry.name.endsWith('.js')) {
-      const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
-      result.push(relativePath);
-    }
-  }
-
-  return result;
-}
-
-function processDir(srcDir, outDir) {
-  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-  const entries = fs.readdirSync(srcDir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const srcPath = path.join(srcDir, entry.name);
-    const outPath = path.join(outDir, entry.name);
-
-    if (entry.isDirectory()) {
-      if (entry.name === 'lib' || entry.name === 'assets' || entry.name === 'ui') {
-        copyDir(srcPath, outPath);
-      } else {
-        processDir(srcPath, outPath);
-      }
-    } else if (entry.name.endsWith('.js')) {
-      encryptFile(srcPath, outPath + '.enc');
-    } else {
-      fs.copyFileSync(srcPath, outPath);
-    }
-  }
-}
-
 if (fs.existsSync(OUT_DIR)) {
   fs.rmSync(OUT_DIR, { recursive: true });
 }
 
-const jsFiles = discoverJsFiles(SRC_DIR);
-console.log('File JS ditemukan:', jsFiles.length);
-jsFiles.forEach(f => console.log('  -', f));
+fs.mkdirSync(OUT_DIR, { recursive: true });
 
-processDir(SRC_DIR, OUT_DIR);
+// Encrypt setiap file JS di daftar
+console.log('=== Encrypting JS files ===');
+for (const file of JS_FILES) {
+  const inputPath = path.join(SRC_DIR, file);
+  const outputPath = path.join(OUT_DIR, file + '.enc');
+  
+  if (fs.existsSync(inputPath)) {
+    encryptFile(inputPath, outputPath);
+    console.log('  OK:', file);
+  } else {
+    console.log('  MISSING:', file);
+  }
+}
+
+// Copy file non-JS
+console.log('=== Copying non-JS files ===');
+const entries = fs.readdirSync(SRC_DIR, { withFileTypes: true });
+for (const entry of entries) {
+  const srcPath = path.join(SRC_DIR, entry.name);
+  const outPath = path.join(OUT_DIR, entry.name);
+  
+  if (entry.isDirectory()) {
+    if (entry.name === 'lib' || entry.name === 'assets' || entry.name === 'ui') {
+      copyDir(srcPath, outPath);
+      console.log('  DIR:', entry.name);
+    }
+  } else if (!entry.name.endsWith('.js')) {
+    fs.copyFileSync(srcPath, outPath);
+    console.log('  FILE:', entry.name);
+  }
+}
 
 const keyHex = ENCRYPTION_KEY.toString('hex');
 const ivHex = IV.toString('hex');
@@ -99,7 +101,7 @@ function splitHex(hex, parts) {
 const keyParts = splitHex(keyHex, 24);
 const ivParts = splitHex(ivHex, 20);
 
-const filesArray = jsFiles.map(f => `'${f}'`).join(', ');
+const filesArray = JS_FILES.map(f => `'${f}'`).join(', ');
 
 const loaderCode = `
 (function() {
@@ -353,6 +355,6 @@ const loaderCode = `
 
 fs.writeFileSync(path.join(OUT_DIR, 'loader.js'), loaderCode);
 
-console.log('Selesai! File ter-encrypt ada di:', OUT_DIR);
-console.log('Total file JS:', jsFiles.length);
+console.log('=== Selesai ===');
+console.log('Total file JS:', JS_FILES.length);
 console.log('Loader size:', loaderCode.length, 'bytes');
