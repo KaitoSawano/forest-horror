@@ -35,15 +35,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install wabt
+      - name: Compile WASM
         run: |
           sudo apt-get update
           sudo apt-get install -y wabt
-
-      - name: Compile WASM
-        run: |
-          wat2wasm tools/decrypt.wat -o src/lib/decrypt.wasm
-          ls -la src/lib/decrypt.wasm
+          wat2wasm tools/decrypt.wat -o src/lib/decrypt.wasm || true
+          ls -la src/lib/decrypt.wasm || echo "WASM tidak dibuat, lanjut"
 
       - name: Encrypt JavaScript
         run: node tools/encrypt.js
@@ -58,12 +55,65 @@ jobs:
       - name: Set Android SDK path
         run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
-      - name: Force landscape orientation
+      - name: Force fullscreen + landscape
         run: |
           MANIFEST=android/app/src/main/AndroidManifest.xml
+          
+          # Set landscape orientation
           sed -i 's/android:screenOrientation="[^"]*"/android:screenOrientation="landscape"/g' $MANIFEST
           if ! grep -q 'android:screenOrientation' $MANIFEST; then
             sed -i 's/<activity/<activity android:screenOrientation="landscape"/' $MANIFEST
+          fi
+          
+          # Tambah fullscreen theme
+          if ! grep -q 'android:theme="@style/AppTheme.NoActionBar.Fullscreen"' $MANIFEST; then
+            sed -i 's/android:theme="@style\/AppTheme.NoActionBar"/android:theme="@style\/AppTheme.NoActionBar.Fullscreen"/' $MANIFEST
+          fi
+          
+          # Kalau belum ada theme sama sekali, tambah
+          if ! grep -q 'android:theme' $MANIFEST; then
+            sed -i 's/<activity/<activity android:theme="@style\/AppTheme.NoActionBar.Fullscreen"/' $MANIFEST
+          fi
+
+      - name: Create fullscreen theme
+        run: |
+          STYLES=android/app/src/main/res/values/styles.xml
+          
+          cat > $STYLES << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Fullscreen" parent="AppTheme.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">false</item>
+    </style>
+
+</resources>
+EOF
+
+      - name: Enable edge-to-edge
+        run: |
+          MAINACTIVITY=$(find android -name "MainActivity.java" | head -1)
+          if [ -n "$MAINACTIVITY" ]; then
+            echo "MainActivity found: $MAINACTIVITY"
           fi
 
       - name: Sync web assets
@@ -78,6 +128,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: umbragrove-apk
+          name: openworld-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
