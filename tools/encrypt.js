@@ -119,45 +119,42 @@ const loaderCode = `
   }
   setTimeout(hideSplash, 100);
 
-  // === HIDE STATUS BAR — DELAY 3 DETIK ===
+  // === HIDE STATUS BAR + NAVIGATION BAR ===
   var lastUserInteraction = Date.now();
-  var HIDE_DELAY = 3000;
+  var HIDE_DELAY = 500;
 
-  function hideStatusBar() {
+  function hideBars() {
+    // Hide status bar
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
       try {
         window.Capacitor.Plugins.StatusBar.hide();
         window.Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: true });
       } catch (e) {}
     }
+    
+    // Hide navigation bar
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.HideNavbar) {
+      try {
+        window.Capacitor.Plugins.HideNavbar.hide();
+      } catch (e) {}
+    }
   }
 
-  document.addEventListener('touchstart', function(e) {
-    var touch = e.touches[0];
-    if (touch && touch.clientY < 100) {
-      lastUserInteraction = Date.now();
-    }
-  }, { passive: true });
+  // Panggil setiap 500ms — sama seperti status bar
+  setInterval(hideBars, HIDE_DELAY);
 
-  setInterval(function() {
-    var elapsed = Date.now() - lastUserInteraction;
-    if (elapsed > HIDE_DELAY) {
-      hideStatusBar();
-    }
-  }, 500);
+  // Panggil langsung
+  hideBars();
 
-  hideStatusBar();
-
+  // Saat app kembali dari background
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
-      lastUserInteraction = Date.now();
-      setTimeout(hideStatusBar, 100);
+      setTimeout(hideBars, 100);
     }
   });
 
   window.addEventListener('focus', function() {
-    lastUserInteraction = Date.now();
-    setTimeout(hideStatusBar, 100);
+    setTimeout(hideBars, 100);
   });
 
   // === LOADING BAR ===
@@ -322,9 +319,9 @@ const loaderCode = `
       }, 500);
 
       setTimeout(hideLogs, 2000);
-      setTimeout(hideStatusBar, 100);
-      setTimeout(hideStatusBar, 500);
-      setTimeout(hideStatusBar, 1000);
+      setTimeout(hideBars, 100);
+      setTimeout(hideBars, 500);
+      setTimeout(hideBars, 1000);
     } catch (e) {
       log('IMPORT_FAIL:' + (e.message || e.name || 'unknown'));
       showLogs();
