@@ -120,12 +120,10 @@ const loaderCode = `
   setTimeout(hideSplash, 100);
 
   // === HIDE STATUS BAR + NAVIGATION BAR ===
-  // Delay 3 detik setelah user sentuh area atas
   var lastUserInteraction = Date.now();
   var HIDE_DELAY = 3000;
 
   function hideBars() {
-    // Hide status bar
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
       try {
         window.Capacitor.Plugins.StatusBar.hide();
@@ -133,7 +131,6 @@ const loaderCode = `
       } catch (e) {}
     }
     
-    // Hide navigation bar
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.HideNavbar) {
       try {
         window.Capacitor.Plugins.HideNavbar.hide();
@@ -141,7 +138,6 @@ const loaderCode = `
     }
   }
 
-  // Deteksi user sentuh area atas (untuk swipe status bar)
   document.addEventListener('touchstart', function(e) {
     var touch = e.touches[0];
     if (touch && touch.clientY < 100) {
@@ -149,7 +145,6 @@ const loaderCode = `
     }
   }, { passive: true });
 
-  // Deteksi user sentuh area kanan (untuk swipe navigation bar)
   document.addEventListener('touchstart', function(e) {
     var touch = e.touches[0];
     if (touch && touch.clientX > window.innerWidth - 100) {
@@ -157,7 +152,6 @@ const loaderCode = `
     }
   }, { passive: true });
 
-  // Cek setiap 500ms — apakah sudah lewat 3 detik?
   setInterval(function() {
     var elapsed = Date.now() - lastUserInteraction;
     if (elapsed > HIDE_DELAY) {
@@ -165,10 +159,8 @@ const loaderCode = `
     }
   }, 500);
 
-  // Panggil langsung
   hideBars();
 
-  // Saat app kembali dari background
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
       lastUserInteraction = Date.now();
