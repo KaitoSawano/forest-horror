@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -46,6 +45,27 @@ function copyDir(src, dest) {
   }
 }
 
+function discoverJsFiles(dir, baseDir = dir) {
+  const result = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      if (entry.name === 'lib' || entry.name === 'assets' || entry.name === 'ui') {
+        continue;
+      }
+      result.push(...discoverJsFiles(fullPath, baseDir));
+    } else if (entry.name.endsWith('.js')) {
+      const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
+      result.push(relativePath);
+    }
+  }
+
+  return result;
+}
+
 function processDir(srcDir, outDir) {
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
   const entries = fs.readdirSync(srcDir, { withFileTypes: true });
@@ -72,6 +92,10 @@ if (fs.existsSync(OUT_DIR)) {
   fs.rmSync(OUT_DIR, { recursive: true });
 }
 
+const jsFiles = discoverJsFiles(SRC_DIR);
+console.log('File JS ditemukan:', jsFiles.length);
+jsFiles.forEach(f => console.log('  -', f));
+
 processDir(SRC_DIR, OUT_DIR);
 
 const keyHex = ENCRYPTION_KEY.toString('hex');
@@ -90,8 +114,29 @@ function splitHex(hex, parts) {
 const keyParts = splitHex(keyHex, 24);
 const ivParts = splitHex(ivHex, 20);
 
+const filesArray = jsFiles.map(f => `'${f}'`).join(', ');
+
 const loaderCode = `
 (function() {
+  // === HIDE STATUS BAR ===
+  function hideStatusBar() {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
+      try {
+        window.Capacitor.Plugins.StatusBar.hide();
+        window.Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: true });
+        console.log('[LOADER] Status bar hidden');
+      } catch (e) {
+        console.log('[LOADER] StatusBar error:', e);
+      }
+    } else {
+      console.log('[LOADER] StatusBar plugin tidak tersedia');
+    }
+  }
+  
+  hideStatusBar();
+  setTimeout(hideStatusBar, 1000);
+  setTimeout(hideStatusBar, 3000);
+
   var LOGS = [];
 
   function log(msg) {
@@ -145,11 +190,8 @@ const loaderCode = `
   var BASE = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
   log('BASE=' + BASE);
 
-  var files = [
-    'main.js', 'forest.js', 'lighting.js', 'controls.js',
-    'battery.js', 'books.js', 'house.js', 'graveyard.js',
-    'ui.js', 'audio.js', 'minimap.js', 'path.js'
-  ];
+  var files = [${filesArray}];
+  log('FILES:' + files.length);
 
   async function decryptFile(name) {
     var res = await fetch(BASE + name + '.enc');
@@ -235,6 +277,7 @@ const loaderCode = `
       await import(finalUrls['main.js']);
       log('SUKSES');
       setTimeout(hideLogs, 2000);
+      setTimeout(hideStatusBar, 100);
     } catch (e) {
       log('IMPORT_FAIL:' + (e.message || e.name || 'unknown'));
       showLogs();
@@ -251,4 +294,5 @@ const loaderCode = `
 fs.writeFileSync(path.join(OUT_DIR, 'loader.js'), loaderCode);
 
 console.log('Selesai! File ter-encrypt ada di:', OUT_DIR);
+console.log('Total file JS:', jsFiles.length);
 console.log('Loader size:', loaderCode.length, 'bytes');
