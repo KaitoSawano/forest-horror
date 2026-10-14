@@ -5,20 +5,23 @@
 }
 
 html, body {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   background: #000;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   font-family: 'Courier New', monospace;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 #game {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
@@ -26,29 +29,28 @@ html, body {
   pointer-events: none;
 }
 
-#hud {
+#book-counter {
   position: fixed;
-  top: 16px;
-  left: 16px;
-  color: #fff;
-  font-family: monospace;
-  font-size: 13px;
-  background: rgba(0, 0, 0, 0.5);
-  padding: 8px 12px;
-  border-radius: 6px;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #cc1111;
+  font-family: 'Courier New', monospace;
+  font-size: 32px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow:
+    0 0 8px #ff0000,
+    0 0 20px #aa0000;
   pointer-events: none;
   z-index: 100;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  max-width: 90vw;
   opacity: 0;
   transition: opacity 0.5s;
 }
 
-#hud.visible { opacity: 1; }
-
-#hud .low-hp { color: #ff4444; }
+#book-counter.visible {
+  opacity: 1;
+}
 
 #joystick-base {
   position: fixed;
@@ -132,11 +134,10 @@ html, body {
   opacity: 1;
 }
 
-/* ===== PETA FULLSCREEN OVERLAY ===== */
 #map-overlay {
   position: fixed;
   top: 0; left: 0;
-  width: 100%; height: 100%;
+  width: 100vw; height: 100vh;
   z-index: 400;
   display: none;
   justify-content: center;
@@ -193,7 +194,7 @@ html, body {
 #menu {
   position: fixed;
   top: 0; left: 0;
-  width: 100%; height: 100%;
+  width: 100vw; height: 100vh;
   z-index: 500;
   background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.85) 100%);
   transition: opacity 0.5s;
@@ -266,7 +267,7 @@ html, body {
 #help-overlay {
   position: fixed;
   top: 0; left: 0;
-  width: 100%; height: 100%;
+  width: 100vw; height: 100vh;
   display: none;
   flex-direction: column;
   justify-content: center;
@@ -316,7 +317,7 @@ html, body {
 #gameover-overlay {
   position: fixed;
   top: 0; left: 0;
-  width: 100%; height: 100%;
+  width: 100vw; height: 100vh;
   display: none;
   flex-direction: column;
   justify-content: center;
@@ -382,27 +383,4 @@ html, body {
   word-break: break-all;
   border-radius: 6px;
   pointer-events: none;
-}
-
-#book-counter {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #cc1111;
-  font-family: 'Courier New', monospace;
-  font-size: 32px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  text-shadow:
-    0 0 8px #ff0000,
-    0 0 20px #aa0000;
-  pointer-events: none;
-  z-index: 100;
-  opacity: 0;
-  transition: opacity 0.5s;
-}
-
-#book-counter.visible {
-  opacity: 1;
 }
