@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Patch MainActivity.java untuk immersive fullscreen + auto-hide status bar & navigation bar."""
+"""Patch MainActivity.java untuk immersive fullscreen + auto-hide 3 detik (status bar + nav bar)."""
 import os
 import subprocess
 
-# Cari MainActivity.java
 result = subprocess.run(
     ['find', 'android', '-name', 'MainActivity.java'],
     capture_output=True, text=True
@@ -20,7 +19,7 @@ if not mainactivity or not os.path.exists(mainactivity):
 with open(mainactivity, 'r') as f:
     content = f.read()
 
-if 'SYSTEM_UI_FLAG_IMMERSIVE_STICKY' in content:
+if 'hideUiRunnable' in content:
     print('Immersive fullscreen already present')
     exit(0)
 
@@ -28,37 +27,57 @@ immersive_code = '''
         // === IMMERSIVE FULLSCREEN + AUTO HIDE 3 DETIK ===
         final android.view.View decorView = getWindow().getDecorView();
         final android.os.Handler handler = new android.os.Handler();
+        
         final Runnable hideUiRunnable = new Runnable() {
             @Override
             public void run() {
-                decorView.setSystemUiVisibility(
-                    android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                );
+                if (android.os.Build.VERSION.SDK_INT >= 30) {
+                    android.view.WindowInsetsController controller = getWindow().getInsetsController();
+                    if (controller != null) {
+                        controller.hide(android.view.WindowInsets.Type.statusBars() | android.view.WindowInsets.Type.navigationBars());
+                        controller.setSystemBarsBehavior(android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    }
+                } else {
+                    decorView.setSystemUiVisibility(
+                        android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    );
+                }
             }
         };
         
-        // Set immersive mode pertama kali
+        // Panggil pertama kali
         hideUiRunnable.run();
         
         // Transparent bars
         getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
         getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
         
-        // Listener: kalau system UI muncul (user swipe), tunggu 3 detik lalu hide lagi
+        // Listener untuk system UI visibility (Android 10-)
         decorView.setOnSystemUiVisibilityChangeListener(
             new android.view.View.OnSystemUiVisibilityChangeListener() {
                 @Override
                 public void onSystemUiVisibilityChange(int visibility) {
                     if ((visibility & android.view.View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                        // System UI muncul — tunggu 3 detik lalu hide
                         handler.removeCallbacks(hideUiRunnable);
                         handler.postDelayed(hideUiRunnable, 3000);
                     }
+                }
+            }
+        );
+        
+        // Listener untuk window insets (Android 11+ — handle navigation bar)
+        decorView.setOnApplyWindowInsetsListener(
+            new android.view.View.OnApplyWindowInsetsListener() {
+                @Override
+                public android.view.WindowInsets onApplyWindowInsets(android.view.View v, android.view.WindowInsets insets) {
+                    handler.removeCallbacks(hideUiRunnable);
+                    handler.postDelayed(hideUiRunnable, 3000);
+                    return insets;
                 }
             }
         );
@@ -71,6 +90,6 @@ if 'super.onCreate(savedInstanceState);' in content:
     )
     with open(mainactivity, 'w') as f:
         f.write(content)
-    print('Immersive fullscreen + auto-hide added')
+    print('Immersive fullscreen + auto-hide 3 detik added')
 else:
     print('super.onCreate not found')
