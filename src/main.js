@@ -105,10 +105,9 @@ try {
     100
   );
 
-  // === SPAWN DI SEBELAH MOBIL ===
-  // Mobil di (8, -15), pemain spawn di (5, -15) — 3 unit di kiri mobil
-  const SPAWN_X = 5;
-  const SPAWN_Z = -15;
+  // Spawn JAUH dari mobil
+  const SPAWN_X = 2;
+  const SPAWN_Z = -10;
 
   camera.position.set(SPAWN_X, 1.7, SPAWN_Z);
   scene.add(camera);
@@ -131,11 +130,6 @@ try {
   createLighting(scene);
 
   createCar(scene, obstacles);
-
-  // === SPAWN SETELAH MOBIL DIBUAT ===
-  // Pindahkan obstacle mobil dulu biar tidak collision dengan pemain
-  const carObstacle = obstacles[obstacles.length - 1];
-  console.log('Mobil obstacle:', carObstacle);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
