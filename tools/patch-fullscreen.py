@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Patch MainActivity.java untuk immersive fullscreen."""
+"""Patch MainActivity.java untuk immersive fullscreen yang agresif."""
 import os
 import subprocess
 
@@ -25,14 +25,45 @@ if 'SYSTEM_UI_FLAG_IMMERSIVE_STICKY' in content:
     exit(0)
 
 immersive_code = '''
-        // Immersive fullscreen
-        getWindow().getDecorView().setSystemUiVisibility(
+        // === IMMERSIVE FULLSCREEN AGRESIF ===
+        final android.view.View decorView = getWindow().getDecorView();
+        
+        // Hide system UI
+        decorView.setSystemUiVisibility(
             android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
             | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
             | android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
             | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        );
+        
+        // Transparent status bar
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+        
+        // Listener untuk restore immersive mode kalau user swipe
+        decorView.setOnSystemUiVisibilityChangeListener(
+            new android.view.View.OnSystemUiVisibilityChangeListener() {
+                @Override
+                public void onSystemUiVisibilityChange(int visibility) {
+                    if ((visibility & android.view.View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                        decorView.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                decorView.setSystemUiVisibility(
+                                    android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                    | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
+                                    | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                    | android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                    | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                    | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                );
+                            }
+                        }, 3000);
+                    }
+                }
+            }
         );
 '''
 
