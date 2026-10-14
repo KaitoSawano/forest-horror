@@ -1,19 +1,3 @@
-// UmbraGrove
-// Copyright (C) 2026-present AtticForge
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import * as THREE from 'three';
 import { createForest } from './forest.js';
 import { createLighting } from './lighting.js';
@@ -30,7 +14,19 @@ import { createCar } from './car.js';
 
 // UmbraGrove
 // Copyright (C) 2026-present AtticForge
-// ... (header GPL lengkap)
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -120,7 +116,7 @@ try {
     0.1,
     100
   );
-  // Spawn di sebelah mobil (pintu kiri terbuka)
+  // Spawn di sebelah mobil
   camera.position.set(4, 1.7, -8);
   scene.add(camera);
 
@@ -140,6 +136,8 @@ try {
   const obstacles = forestData.obstacles;
 
   createLighting(scene);
+
+  // Buat mobil
   createCar(scene, obstacles);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
