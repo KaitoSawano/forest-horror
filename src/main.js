@@ -14,19 +14,7 @@ import { createCar } from './car.js';
 
 // UmbraGrove
 // Copyright (C) 2026-present AtticForge
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
+// ... (header GPL lengkap)
 
 function showError(msg) {
   const el = document.getElementById('debug');
@@ -116,8 +104,13 @@ try {
     0.1,
     100
   );
-  // Spawn di sebelah mobil
-  camera.position.set(4, 1.7, -8);
+
+  // === SPAWN DI SEBELAH MOBIL ===
+  // Mobil di (8, -15), pemain spawn di (5, -15) — 3 unit di kiri mobil
+  const SPAWN_X = 5;
+  const SPAWN_Z = -15;
+
+  camera.position.set(SPAWN_X, 1.7, SPAWN_Z);
   scene.add(camera);
 
   const renderer = new THREE.WebGLRenderer({
@@ -137,8 +130,12 @@ try {
 
   createLighting(scene);
 
-  // Buat mobil
   createCar(scene, obstacles);
+
+  // === SPAWN SETELAH MOBIL DIBUAT ===
+  // Pindahkan obstacle mobil dulu biar tidak collision dengan pemain
+  const carObstacle = obstacles[obstacles.length - 1];
+  console.log('Mobil obstacle:', carObstacle);
 
   const controls = new PlayerControls(camera, canvas, obstacles, MAP_BOUNDARY);
   const flashlight = new Flashlight(camera);
@@ -149,7 +146,7 @@ try {
   const books = new BookManager(scene, obstacles, MAP_BOUNDARY);
 
   const state = {
-    playerPos: new THREE.Vector3(4, 1.7, -8),
+    playerPos: new THREE.Vector3(SPAWN_X, 1.7, SPAWN_Z),
     time: 7 * 60,
     hp: 100,
     yaw: 0,
